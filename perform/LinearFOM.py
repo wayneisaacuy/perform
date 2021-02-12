@@ -22,7 +22,7 @@ class linearization:
 
 	def initLinear(self, solDomain, solver):
 
-		calcBoundaries(sol, bounds, params, gas)
+		#calcBoundaries(sol, bounds, params, gas) <<<<<<<UPDATE
 
 		gas = solDomain.solInt.gasModel
 
