@@ -6,7 +6,7 @@ from math import sin, pi
 from numpy.linalg import svd
 from perform.solution.solutionBoundary.solutionInlet import solutionInlet 
 from perform.solution.solutionBoundary.solutionOutlet import solutionOutlet
-from Jacobians import calcDSourceDSolPrim, calcDSolPrimDSolCons, calcDFluxDSolPrim
+from Jacobians import calcDSourceDSolPrim, calcDSolPrimDSolCons, calcDRoeFluxDSolPrim
 
 import time
 import os
@@ -16,9 +16,9 @@ import pdb
 
 class linearization:
 
-	#def __init__(self, params: parameters):
+	#def __init__(self, solver):
 
-		#self.NonlinearSol=np.load(os.path.join(params.unsOutDir, "solPrim_LinFOM.npy"), allow_pickle=True) #(256, 4, 1001)
+		
 
 	def initLinear(self, solDomain, solver):
 
@@ -43,7 +43,7 @@ class linearization:
 			else:
 				self.dFPlusdS = dFdQp
 
-		if params.initFromRestart:
+		if solver.initFromRestart:
 			solver.solTime, solDomain.solInt.solPrim = readRestartFile(params.restOutDir)
 		else:
 			solDomain.solInt.solPrim = np.zeros((solver.mesh.numCells, solDomain.gasModel.numEqs), dtype = constants.realType)
@@ -89,7 +89,7 @@ class linearization:
 		# characteristic variables
 		w3In 	= velIn - pressIn / rhoCMean  
 
-			# extrapolate to exterior
+		# extrapolate to exterior
 		if (params.spaceOrder == 1):
 			w3Bound = w3In[0]
 		elif (params.spaceOrder == 2):
