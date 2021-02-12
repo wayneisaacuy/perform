@@ -44,6 +44,12 @@ def main():
 	else:
 		rom = None
 
+	if (solver.calcLinFOM):     
+		linfom = linearization()
+		linfom.initLinear(solDomain, solver)
+	else:
+		linfom = None
+
 	visGroup = visualizationGroup(solDomain, solver) # plots
 
 	##### END SETUP #####
@@ -59,7 +65,7 @@ def main():
 			if (solver.calcROM):
 				rom.advanceIter(solDomain, solver)
 			else:
-				solDomain.advanceIter(solver)
+				solDomain.advanceIter(solver, linfom)
 			solver.timeIter += 1
 			solver.solTime  += solver.dt
 

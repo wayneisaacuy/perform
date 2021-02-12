@@ -137,7 +137,7 @@ class solutionDomain:
 		self.solConsFull[:,idxInt:] 	 = solOut.solCons.copy()
 
 
-	def advanceIter(self, solver):
+	def advanceIter(self, solver, linfom):
 		"""
 		Advance physical solution forward one time iteration
 		"""
@@ -146,7 +146,7 @@ class solutionDomain:
 
 		for self.timeIntegrator.subiter in range(self.timeIntegrator.subiterMax):
 				
-			self.advanceSubiter(solver)
+			self.advanceSubiter(solver, linfom)
 
 			# iterative solver convergence
 			if (self.timeIntegrator.timeType == "implicit"):
@@ -160,12 +160,15 @@ class solutionDomain:
 		self.solInt.updateSolHist() 
 
 
-	def advanceSubiter(self, solver):
+	def advanceSubiter(self, solver, linfom):
 		"""
 		Advance physical solution forward one subiteration of time integrator
 		"""
 
-		calcRHS(self, solver)
+		if (solver.calcLinFOM):  
+			linfom.linearRHS(self, solver)
+		else:
+			calcRHS(self, solver)
 
 		solInt = self.solInt
 
@@ -192,9 +195,13 @@ class solutionDomain:
 
 		else:
 
-			dSol = self.timeIntegrator.solveSolChange(solInt.RHS)
-			solInt.solCons = solInt.solHistCons[0] + dSol
-			solInt.updateState(fromCons=True)
+			if (solver.calcLinFOM):  
+				dSol = self.timeIntegrator.solveSolChange(solInt.RHS)
+				solInt.solPrim = solInt.solHistPrim[0] + dSol
+			else:
+				dSol = self.timeIntegrator.solveSolChange(solInt.RHS)
+				solInt.solCons = solInt.solHistCons[0] + dSol
+				solInt.updateState(fromCons=True)
 
 
 	def calcBoundaryCells(self, solver):

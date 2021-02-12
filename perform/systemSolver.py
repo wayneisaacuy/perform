@@ -89,6 +89,7 @@ class systemSolver:
 
 		# ROM flag
 		self.calcROM = catchInput(paramDict, "calcROM", False)
+		self.calcLinFOM = catchInput(paramDict, "calcLinFOM", False)
 		if not self.calcROM: 
 			self.simType = "FOM"
 		else:

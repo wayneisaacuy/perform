@@ -243,7 +243,7 @@ def calcDViscFluxDSolPrim(solAve):
 	return dFlux_dQp
 
 
-def calcDRoeFluxDSolPrim(solDomain, solver):
+def calcDRoeFluxDSolPrim(solDomain, solver, linRHS: bool = False):
 	"""
 	Compute the gradient of the inviscid and viscous fluxes with respect to the primitive state
 	"""
@@ -262,14 +262,19 @@ def calcDRoeFluxDSolPrim(solDomain, solver):
 	dFluxR_dQpR *= (0.5 / solver.mesh.dx)
 	RoeDiss     *= (0.5 / solver.mesh.dx)
 
-    # Jacobian wrt current cell
-	dFlux_dQp = (dFluxL_dQpL[:,:,1:] + RoeDiss[:,:,1:]) + (-dFluxR_dQpR[:,:,:-1] + RoeDiss[:,:,:-1])
+    if linRHS:  
+		dFlux_dQp = -RoeDiss[:,:,1:] - RoeDiss[:,:,:-1] 
+		dFlux_dQpL = dFluxL_dQpL[:,:,:-1] + RoeDiss[:,:,:-1]
+		dFlux_dQpR = -dFluxR_dQpR[:,:,1:] + RoeDiss[:,:,1:]
+	else:
+    	# Jacobian wrt current cell
+		dFlux_dQp = (dFluxL_dQpL[:,:,1:] + RoeDiss[:,:,1:]) + (-dFluxR_dQpR[:,:,:-1] + RoeDiss[:,:,:-1])
     
-    # Jacobian wrt left neighbor
-	dFlux_dQpL = (-dFluxL_dQpL[:,:,1:-1] - RoeDiss[:,:,:-2])
+    	# Jacobian wrt left neighbor
+		dFlux_dQpL = (-dFluxL_dQpL[:,:,1:-1] - RoeDiss[:,:,:-2])
     
-    # Jacobian wrt right neighbor
-	dFlux_dQpR = (dFluxR_dQpR[:,:,1:-1] - RoeDiss[:,:,2:]) 
+    	# Jacobian wrt right neighbor
+		dFlux_dQpR = (dFluxR_dQpR[:,:,1:-1] - RoeDiss[:,:,2:]) 
     	
 	return dFlux_dQp, dFlux_dQpL, dFlux_dQpR
 
