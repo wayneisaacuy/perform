@@ -68,5 +68,9 @@ visType2    = "field"
 visVar2     = ["pressure", "velocity", "temperature", "species1"]
 visYBounds2 = [[9.5e5,1.04e6], [-15,35], [200,2700], [-0.05,1.05]]
 
+# Linear solver
+calcLinFOM = False
+calcLinROM = False
+
 # ROM params
 calcROM = False
