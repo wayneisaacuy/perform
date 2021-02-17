@@ -262,8 +262,8 @@ def calcDRoeFluxDSolPrim(solDomain, solver, linRHS: bool = False):
 	dFluxR_dQpR *= (0.5 / solver.mesh.dx)
 	RoeDiss     *= (0.5 / solver.mesh.dx)
 
-    if linRHS:  
-		dFlux_dQp = -RoeDiss[:,:,1:] - RoeDiss[:,:,:-1] 
+	if linRHS:
+		dFlux_dQp = -RoeDiss[:,:,1:] - RoeDiss[:,:,:-1]
 		dFlux_dQpL = dFluxL_dQpL[:,:,:-1] + RoeDiss[:,:,:-1]
 		dFlux_dQpR = -dFluxR_dQpR[:,:,1:] + RoeDiss[:,:,1:]
 	else:

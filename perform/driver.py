@@ -6,6 +6,7 @@ from perform.solution.solutionDomain import solutionDomain
 from perform.visualization.visualizationGroup import visualizationGroup
 from perform.rom.romDomain import romDomain
 from perform.miscFuncs import mkdirInWorkdir
+from perform.LinearFOM import linearization
 
 import numpy as np
 import argparse

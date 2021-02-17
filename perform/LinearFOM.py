@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-import constants
+import perform.constants as constants
 from math import sin, pi
 from numpy.linalg import svd
 from perform.solution.solutionBoundary.solutionInlet import solutionInlet 
 from perform.solution.solutionBoundary.solutionOutlet import solutionOutlet
-from Jacobians import calcDSourceDSolPrim, calcDSolPrimDSolCons, calcDRoeFluxDSolPrim
+from perform.Jacobians import calcDSourceDSolPrim, calcDSolPrimDSolCons, calcDRoeFluxDSolPrim
 
 import time
 import os
@@ -22,11 +22,16 @@ class linearization:
 
 	def initLinear(self, solDomain, solver):
 
-		#calcBoundaries(sol, bounds, params, gas) <<<<<<<UPDATE
+		if (solDomain.directSampIdxs[0] == 0):
+			solDomain.solIn.calcBoundaryState(solver, solPrim=solDomain.solInt.solPrim[:,:2], solCons=solDomain.solInt.solCons[:,:2])
+		if (solDomain.directSampIdxs[-1] == (solver.mesh.numCells-1)):
+			solDomain.solOut.calcBoundaryState(solver, solPrim=solDomain.solInt.solPrim[:,-2:], solCons=solDomain.solInt.solCons[:,-2:])
 
+		solDomain.fillSolFull()
+		
 		gas = solDomain.solInt.gasModel
 
-		gamma_matrix_inv = calcDSolPrimDSolCons(solInt)
+		gamma_matrix_inv = calcDSolPrimDSolCons(solDomain.solInt)
 		dSdQp = np.zeros((solDomain.gasModel.numEqs, solDomain.gasModel.numEqs, solver.mesh.numCells), dtype=constants.realType)
 		if params.sourceOn:
 			dSdQp = calcDSourceDSolPrim(solDomain.timeIntegrator.dt)
