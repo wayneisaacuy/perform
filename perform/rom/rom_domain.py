@@ -81,6 +81,9 @@ class RomDomain:
         low_dim_init_files:
             list of strings of file names associated with low-dimensional state initialization profiles
             for each RomModel.
+        
+        Added:
+        adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
     def __init__(self, sol_domain, solver):
@@ -162,7 +165,19 @@ class RomDomain:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
             if self.hyper_reduc:
                 self.load_hyper_reduc(sol_domain)
-
+                
+                # Adaptive basis
+                self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
+                
+                # Set up adaptive basis, if necessary
+                
+                if self.adaptiveROM:
+                    self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
+                    self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
+                    self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
+                    
+        
+            
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
         if self.has_time_integrator:
