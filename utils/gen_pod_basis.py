@@ -6,25 +6,30 @@ from numpy.linalg import svd
 
 # ----- BEGIN USER INPUT -----
 
-data_dir = "~/path/to/data/dir"
-data_file = "sol_prim_FOM.npy"
+#data_dir = "~/path/to/data/dir"
+#data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/unsteady_field_results"
+data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/unsteady_field_results"
+data_file = "sol_cons_FOM.npy"
 
 iter_start = 0  # zero-indexed starting index for snapshot array
 iter_end = 4000  # zero-indexed ending index for snapshot array
 iter_skip = 1
 
 # centering method, accepts "init_cond" and "mean"
-cent_type = "init_cond"
+#cent_type = "init_cond"
+cent_type = "mean"
 
 # normalization method, accepts "minmax" and "l2"
 norm_type = "minmax"
 
 # zero-indexed list of lists for group variables
-var_idxs = [[0], [1], [2], [3]]
+#var_idxs = [[0], [1], [2], [3]]
+var_idxs = [[0, 1, 2, 3]]
 
-max_modes = 25
+max_modes = 2500 #250
 
-out_dir = "~/path/to/output/dir"
+#out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/rom_input"
+out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/rom_input"
 
 # ----- END USER INPUT -----
 
@@ -49,7 +54,7 @@ def main():
         # break data array into different variable groups
         group_arr = snap_arr[var_idx_list, :, :]
         num_vars = group_arr.shape[0]
-
+        
         # center and normalize data
         group_arr, cent_prof = center_data(group_arr)
         group_arr, norm_sub_prof, norm_fac_prof = normalize_data(group_arr)

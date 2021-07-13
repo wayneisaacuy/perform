@@ -8,7 +8,7 @@ dt          = 5e-8
 num_steps   = 14000
 time_scheme = "bdf"
 time_order  = 2
-dual_time   = True
+dual_time   = False
 res_tol     = 1e-10
 
 # space discretization
@@ -50,7 +50,7 @@ out_interval = 10
 prim_out     = True
 cons_out     = True
 source_out   = False
-rhs_outut    = False
+rhs_out    = False
 
 # probe output
 probe_locs = [0.0025, 0.0075]
@@ -66,4 +66,4 @@ vis_var_1      = ["temperature", "species_1", "pressure", "velocity"]
 vis_y_bounds_1 = [[0, 2700], [-0.05, 1.05], [975000, 1025000], [-10, 30]]
 
 # ROM flag
-calc_rom = False
+calc_rom = True
