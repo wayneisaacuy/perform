@@ -45,7 +45,7 @@ class RomModel:
         cent_prof_prim: NumPy array of primitive variable centering profile, if required by ROM method.
     """
 
-    def __init__(self, model_idx, rom_domain, sol_domain):
+    def __init__(self, model_idx, rom_domain, sol_domain, solver):
 
         self.model_idx = model_idx
         self.latent_dim = rom_domain.latent_dims[self.model_idx]

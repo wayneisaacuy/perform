@@ -31,9 +31,9 @@ class LinearProjROM(ProjectionROM):
             solution-related vectors flattened in C order.
     """
 
-    def __init__(self, model_idx, rom_domain, sol_domain):
+    def __init__(self, model_idx, rom_domain, sol_domain, solver):
 
-        super().__init__(model_idx, rom_domain, sol_domain)
+        super().__init__(model_idx, rom_domain, sol_domain, solver)
 
         # load and check trial basis
         self.trial_basis = np.load(rom_domain.model_files[self.model_idx])

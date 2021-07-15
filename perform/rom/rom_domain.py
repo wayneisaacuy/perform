@@ -202,7 +202,7 @@ class RomDomain:
         self.model_list = [None] * self.num_models
         for model_idx in range(self.num_models):
             # Initialize model
-            self.model_list[model_idx] = get_rom_model(model_idx, self, sol_domain)
+            self.model_list[model_idx] = get_rom_model(model_idx, self, sol_domain, solver)
             model = self.model_list[model_idx]
 
             # Initialize state

@@ -1,6 +1,7 @@
 import numpy as np
 
 from perform.rom.projection_rom.linear_proj_rom.linear_proj_rom import LinearProjROM
+from perform.rom.adaptive_basis.adaptive_ROM import AdaptROM
 
 
 class LinearGalerkinProj(LinearProjROM):
@@ -20,12 +21,12 @@ class LinearGalerkinProj(LinearProjROM):
         hyper_reduc_operator: 2D NumPy array of gappy POD projection operator. Precomputed for cost savings.
     """
 
-    def __init__(self, model_idx, rom_domain, sol_domain):
+    def __init__(self, model_idx, rom_domain, sol_domain, solver):
 
         if (rom_domain.time_integrator.time_type == "implicit") and (rom_domain.time_integrator.dual_time):
             raise ValueError("Galerkin is intended for conservative variable evolution, please set dual_time = False")
 
-        super().__init__(model_idx, rom_domain, sol_domain)
+        super().__init__(model_idx, rom_domain, sol_domain, solver)
 
         if not rom_domain.time_integrator.time_type == "explicit":
             # precompute scaled trial basis
@@ -38,6 +39,9 @@ class LinearGalerkinProj(LinearProjROM):
                 @ self.hyper_reduc_basis
                 @ np.linalg.pinv(self.hyper_reduc_basis[self.direct_samp_idxs_flat, :])
             )
+
+        if rom_domain.adaptiveROM: 
+            self.adapt = AdaptROM(self, solver, rom_domain)
 
     def calc_projector(self, sol_domain):
         """Compute RHS projection operator.

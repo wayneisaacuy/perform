@@ -23,12 +23,12 @@ except ImportError:
     TFKERAS_IMPORT_SUCCESS = False
 
 
-def get_rom_model(model_idx, rom_domain, sol_domain):
+def get_rom_model(model_idx, rom_domain, sol_domain, solver):
     """Helper function to retrieve ROM models"""
 
     # linear subspace methods
     if rom_domain.rom_method == "linear_galerkin_proj":
-        model = LinearGalerkinProj(model_idx, rom_domain, sol_domain)
+        model = LinearGalerkinProj(model_idx, rom_domain, sol_domain, solver)
 
     elif rom_domain.rom_method == "linear_lspg_proj":
         model = LinearLSPGProj(model_idx, rom_domain, sol_domain)

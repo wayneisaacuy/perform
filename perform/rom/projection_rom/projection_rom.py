@@ -16,11 +16,11 @@ class ProjectionROM(RomModel):
         sol_domain: SolutionDomain with which this RomModel's RomDomain is associated.
     """
 
-    def __init__(self, modelIdx, rom_domain, sol_domain):
+    def __init__(self, modelIdx, rom_domain, sol_domain, solver):
 
         self.hyper_reduc = rom_domain.hyper_reduc
 
-        super().__init__(modelIdx, rom_domain, sol_domain)
+        super().__init__(modelIdx, rom_domain, sol_domain, solver)
 
     def project_to_low_dim(self, projector, full_dim_arr, transpose=False):
         """Project given full-dimensional vector onto low-dimensional space via given projector.
