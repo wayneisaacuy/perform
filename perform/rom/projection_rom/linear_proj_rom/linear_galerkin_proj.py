@@ -30,7 +30,7 @@ class LinearGalerkinProj(LinearProjROM):
         if not rom_domain.time_integrator.time_type == "explicit":
             # precompute scaled trial basis
             self.trial_basis_scaled = self.trial_basis * self.norm_fac_prof_cons.ravel(order="C")[:, None]
-
+            
         if self.hyper_reduc:
             # procompute hyper-reduction projector, V^T * U * [S^T * U]^+
             self.hyper_reduc_operator = (
@@ -53,7 +53,7 @@ class LinearGalerkinProj(LinearProjROM):
             self.projector = self.hyper_reduc_operator
         else:
             self.projector = self.trial_basis.T
-
+        
     def calc_d_code(self, res_jacob, res, sol_domain):
         """Compute change in low-dimensional state for implicit scheme Newton iteration.
 

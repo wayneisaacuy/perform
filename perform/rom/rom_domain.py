@@ -174,10 +174,12 @@ class RomDomain:
                 if self.adaptiveROM:
                     self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
-                    self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
-                    
-        
-            
+                    #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
+                    self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
+                    #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
+                    self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
+                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.mesh.num_cells)
+
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
         if self.has_time_integrator:
@@ -242,7 +244,7 @@ class RomDomain:
 
         # If method requires numerical time integration
         else:
-
+ 
             for self.time_integrator.subiter in range(self.time_integrator.subiter_max):
 
                 self.advance_subiter(sol_domain, solver)
