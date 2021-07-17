@@ -235,6 +235,8 @@ class RomDomain:
             sol_domain: SolutionDomain with which this RomDomain is associated.
             solver: SystemSolver containing global simulation parameters.
         """
+        
+        # where you solve the ROM for a current time step
 
         print("Iteration " + str(solver.iter))
 
@@ -257,6 +259,12 @@ class RomDomain:
 
         sol_domain.sol_int.update_sol_hist()
         self.update_code_hist()
+        
+        # update basis here
+        if self.has_time_integrator:
+            if self.adaptiveROM:
+                # update basis here
+                print("adaptive")
 
     def advance_subiter(self, sol_domain, solver):
         """Advance low-dimensional state and full solution forward one subiteration of time integrator.
