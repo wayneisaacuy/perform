@@ -471,6 +471,12 @@ class RomDomain:
             len(np.unique(sol_domain.direct_samp_idxs)) == sol_domain.num_samp_cells
         ), "Sampling indices must be unique"
 
+        self.compute_cellidx_hyper_reduc(sol_domain)
+
+    def compute_cellidx_hyper_reduc(self,sol_domain):
+        
+        # moved part of load_hyper_reduc here so that this function can be called if DEIM interpolation points are adapted
+        
         # Compute indices for inviscid flux calculations
         # NOTE: have to account for fact that boundary cells are prepended/appended
         # Indices of "left" cells for flux calcs, within sol_prim/cons_full
