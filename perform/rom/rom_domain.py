@@ -264,9 +264,14 @@ class RomDomain:
         if self.has_time_integrator:
             if self.adaptiveROM:
                 
-                # check if k = w_{init}+1
+                if solver.time_iter == self.adaptiveROMInitTime + 1:
                     # initialize window here
-                
+                    for model_idx, model in enumerate(self.model_list):
+                        pass  
+                # check if k = w_{init}+1
+                    
+                for model_idx, model in enumerate(self.model_list):
+                    pass
                 # call update_residualSampling_window
                 
                 # call adeim 
