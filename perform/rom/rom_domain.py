@@ -263,6 +263,16 @@ class RomDomain:
         # update basis here
         if self.has_time_integrator:
             if self.adaptiveROM:
+                
+                # check if k = w_{init}+1
+                    # initialize window here
+                
+                # call update_residualSampling_window
+                
+                # call adeim 
+                
+                # update quantities that depend on the basis and the interpolation points
+                
                 # update basis here
                 print("adaptive")
 

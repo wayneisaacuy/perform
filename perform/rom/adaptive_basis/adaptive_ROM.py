@@ -8,6 +8,10 @@ class AdaptROM():
         # attributes needed:
         # window of high-dim RHS
         
+        # methods needed: update_residualSampling_window
+        # adeim
+        # initialize_window
+        
         self.check = 1
         # self.adaptiveROMMethod = romDomain.adaptiveROMMethod
         # self.adaptsubIteration   = False
@@ -48,6 +52,16 @@ class AdaptROM():
 
         # else:
         #     raise ValueError("Invalid selection for adaptive ROM type")
+        
+    def init_window(self):
+        # this has to be done for every model in model list
+        pass
+    
+    def update_residualSampling_window(self):
+        pass
+    
+    def adeim(self):
+        pass
 
     def initializeLookBackWindow(self, romDomain, model):
 
