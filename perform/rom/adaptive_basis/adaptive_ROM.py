@@ -5,6 +5,9 @@ from scipy.linalg import orth
 class AdaptROM():
     def __init__(self, model, solver, romDomain):
 
+        # attributes needed:
+        # window of high-dim RHS
+        
         self.check = 1
         # self.adaptiveROMMethod = romDomain.adaptiveROMMethod
         # self.adaptsubIteration   = False
