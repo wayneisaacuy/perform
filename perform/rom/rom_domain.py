@@ -268,6 +268,7 @@ class RomDomain:
                     # initialize window here
                     for model_idx, model in enumerate(self.model_list):
                         pass  
+                    
                 # check if k = w_{init}+1
                     
                 for model_idx, model in enumerate(self.model_list):

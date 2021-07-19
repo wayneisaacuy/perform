@@ -56,11 +56,17 @@ def main():
         time_start = time()
         for solver.iter in range(1, solver.num_steps + 1):
 
+            # edit for adaptive basis. first run FOM to generate window
+            
             # Advance one physical time step
             if solver.calc_rom:
-                rom_domain.advance_iter(sol_domain, solver)
+                if rom_domain.adaptiveROM and solver.time_iter < rom_domain.adaptiveROMInitTime + 1:
+                    sol_domain.advance_iter(solver)
+                else:
+                    rom_domain.advance_iter(sol_domain, solver)
             else:
                 sol_domain.advance_iter(solver)
+            
             solver.time_iter += 1
             solver.sol_time += solver.dt
 
