@@ -164,10 +164,12 @@ class RomDomain:
         if self.is_intrusive:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
             if self.hyper_reduc:
-                self.load_hyper_reduc(sol_domain)
                 
+                # First check if using adaptive basis
                 # Adaptive basis
                 self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
+                
+                self.load_hyper_reduc(sol_domain)
                 
                 # Set up adaptive basis, if necessary
                 
@@ -178,7 +180,7 @@ class RomDomain:
                     self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
                     #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                     self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
-                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.mesh.num_cells)
+                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", 4*sol_domain.mesh.num_cells)
 
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
@@ -486,6 +488,39 @@ class RomDomain:
         assert (
             len(np.unique(sol_domain.direct_samp_idxs)) == sol_domain.num_samp_cells
         ), "Sampling indices must be unique"
+        
+        # Paths to hyper-reduction files (unpacked later)
+        hyper_reduc_files = self.rom_dict["hyper_reduc_files"]
+        self.hyper_reduc_files = [None] * self.num_models
+        assert len(hyper_reduc_files) == self.num_models, "Must provide hyper_reduc_files for each model"
+        for model_idx in range(self.num_models):
+            in_file = os.path.join(self.model_dir, hyper_reduc_files[model_idx])
+            assert os.path.isfile(in_file), "Could not find hyper-reduction file at " + in_file
+            self.hyper_reduc_files[model_idx] = in_file
+
+        # Load hyper reduction dimensions and check validity
+        self.hyper_reduc_dims = catch_list(self.rom_dict, "hyper_reduc_dims", [0], len_highest=self.num_models)
+
+        for i in self.hyper_reduc_dims:
+            assert i > 0, "hyper_reduc_dims must contain positive integers"
+        if self.num_models == 1:
+            assert (
+                len(self.hyper_reduc_dims) == 1
+            ), "Must provide only one value of hyper_reduc_dims when num_models = 1"
+            assert self.hyper_reduc_dims[0] > 0, "hyper_reduc_dims must contain positive integers"
+        else:
+            if len(self.hyper_reduc_dims) == self.num_models:
+                pass
+            elif len(self.hyper_reduc_dims) == 1:
+                print("Only one value provided in hyper_reduc_dims, applying to all models")
+                sleep(1.0)
+                self.hyper_reduc_dims = [self.hyper_reduc_dims[0]] * self.num_models
+            else:
+                raise ValueError("Must provide either num_models or 1 entry in hyper_reduc_dims")
+
+        # Copy indices for ease of use
+        self.num_samp_cells = sol_domain.num_samp_cells
+        self.direct_samp_idxs = sol_domain.direct_samp_idxs
 
         self.compute_cellidx_hyper_reduc(sol_domain)
 
@@ -590,39 +625,6 @@ class RomDomain:
         if sol_domain.invisc_flux_name == "roe":
             ones_prof = np.ones((gas.num_eqs, sol_domain.num_flux_faces), dtype=REAL_TYPE)
             sol_domain.sol_ave = SolutionPhys(gas, sol_domain.num_flux_faces, sol_prim_in=ones_prof)
-
-        # Copy indices for ease of use
-        self.num_samp_cells = sol_domain.num_samp_cells
-        self.direct_samp_idxs = sol_domain.direct_samp_idxs
-
-        # Paths to hyper-reduction files (unpacked later)
-        hyper_reduc_files = self.rom_dict["hyper_reduc_files"]
-        self.hyper_reduc_files = [None] * self.num_models
-        assert len(hyper_reduc_files) == self.num_models, "Must provide hyper_reduc_files for each model"
-        for model_idx in range(self.num_models):
-            in_file = os.path.join(self.model_dir, hyper_reduc_files[model_idx])
-            assert os.path.isfile(in_file), "Could not find hyper-reduction file at " + in_file
-            self.hyper_reduc_files[model_idx] = in_file
-
-        # Load hyper reduction dimensions and check validity
-        self.hyper_reduc_dims = catch_list(self.rom_dict, "hyper_reduc_dims", [0], len_highest=self.num_models)
-
-        for i in self.hyper_reduc_dims:
-            assert i > 0, "hyper_reduc_dims must contain positive integers"
-        if self.num_models == 1:
-            assert (
-                len(self.hyper_reduc_dims) == 1
-            ), "Must provide only one value of hyper_reduc_dims when num_models = 1"
-            assert self.hyper_reduc_dims[0] > 0, "hyper_reduc_dims must contain positive integers"
-        else:
-            if len(self.hyper_reduc_dims) == self.num_models:
-                pass
-            elif len(self.hyper_reduc_dims) == 1:
-                print("Only one value provided in hyper_reduc_dims, applying to all models")
-                sleep(1.0)
-                self.hyper_reduc_dims = [self.hyper_reduc_dims[0]] * self.num_models
-            else:
-                raise ValueError("Must provide either num_models or 1 entry in hyper_reduc_dims")
 
         # Redo CSR matrix indices for sparse Jacobian
         num_cells = sol_domain.mesh.num_cells

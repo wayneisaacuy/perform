@@ -3,7 +3,7 @@ from scipy.linalg import orth
 
 
 class AdaptROM():
-    def __init__(self, model, solver, romDomain):
+    def __init__(self, model, solver, rom_domain, sol_domain):
 
         # attributes needed:
         # window of high-dim RHS
@@ -12,7 +12,8 @@ class AdaptROM():
         # adeim
         # initialize_window
         
-        self.check = 1
+        # this assumes vector construction of ROM
+        self.window = np.zeros((4*sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
         # self.adaptiveROMMethod = romDomain.adaptiveROMMethod
         # self.adaptsubIteration   = False
 

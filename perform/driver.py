@@ -57,12 +57,14 @@ def main():
         for solver.iter in range(1, solver.num_steps + 1):
 
             # edit for adaptive basis. first run FOM to generate window
+            # if rom_domain.adaptiveROM and solver.time_iter < rom_domain.adaptiveROMInitTime + 1:
+            #         sol_domain.advance_iter(solver)
+            #     else:
+            #         if rom_domain.adaptiveROM and solver.time_iter == rom_domain.adaptiveROMInitTime + 1:
+            #             rom_domain.compute_cellidx_hyper_reduc(sol_domain)
             
             # Advance one physical time step
             if solver.calc_rom:
-                if rom_domain.adaptiveROM and solver.time_iter < rom_domain.adaptiveROMInitTime + 1:
-                    sol_domain.advance_iter(solver)
-                else:
                     rom_domain.advance_iter(sol_domain, solver)
             else:
                 sol_domain.advance_iter(solver)
