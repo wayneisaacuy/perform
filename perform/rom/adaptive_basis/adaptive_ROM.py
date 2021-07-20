@@ -71,10 +71,13 @@ class AdaptROM():
         except:
             raise Exception("File for snapshots not found")
     
-    def update_residualSampling_window(self):
+    def update_residualSampling_window(self, solver):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
-        pass
+        if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
+            
+        else:
+        
     
     def adeim(self):
         pass
