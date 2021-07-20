@@ -270,12 +270,11 @@ class RomDomain:
                 # check that we are constructing a vector ROM
                 assert len(self.model_list) == 1, "AADEIM only works for vector ROM for now."
 
+                # initialize window here
                 if solver.time_iter == 1:
-                    # initialize window here
+                    
                     for model_idx, model in enumerate(self.model_list):
                         model.adapt.init_window(self)
-                    
-                # check if k = w_{init}+1
                     
                 for model_idx, model in enumerate(self.model_list):
                     pass

@@ -15,6 +15,9 @@ class AdaptROM():
         
         # this assumes vector construction of ROM
         self.window = np.zeros((4*sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
+        self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
+        self.residual_samplepts_comp = np.zeros(4*sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
+        
         # self.adaptiveROMMethod = romDomain.adaptiveROMMethod
         # self.adaptsubIteration   = False
 
@@ -57,6 +60,7 @@ class AdaptROM():
         
     def init_window(self, rom_domain):
         # this has to be done for every model in model list
+        # initializes the window
         model_dir = rom_domain.model_dir
         
         try:
@@ -68,6 +72,8 @@ class AdaptROM():
             raise Exception("File for snapshots not found")
     
     def update_residualSampling_window(self):
+        # this updates the window and finds the sampling points (and its complement) for the residual
+        
         pass
     
     def adeim(self):
