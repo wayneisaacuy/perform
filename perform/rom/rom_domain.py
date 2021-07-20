@@ -179,8 +179,9 @@ class RomDomain:
                     #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
                     self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
                     #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
-                    self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
+                    #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
                     self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", 4*sol_domain.mesh.num_cells)
+                    self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
 
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
@@ -266,10 +267,13 @@ class RomDomain:
         if self.has_time_integrator:
             if self.adaptiveROM:
                 
-                if solver.time_iter == self.adaptiveROMInitTime + 1:
+                # check that we are constructing a vector ROM
+                assert len(self.model_list) == 1, "AADEIM only works for vector ROM for now."
+
+                if solver.time_iter == 1:
                     # initialize window here
                     for model_idx, model in enumerate(self.model_list):
-                        pass  
+                        model.adapt.init_window(self)
                     
                 # check if k = w_{init}+1
                     

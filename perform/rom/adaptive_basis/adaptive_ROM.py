@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from scipy.linalg import orth
 
@@ -54,9 +55,17 @@ class AdaptROM():
         # else:
         #     raise ValueError("Invalid selection for adaptive ROM type")
         
-    def init_window(self):
+    def init_window(self, rom_domain):
         # this has to be done for every model in model list
-        pass
+        model_dir = rom_domain.model_dir
+        
+        try:
+            temp_window = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
+            temp_window = temp_window[:,:,:rom_domain.adaptiveROMWindowSize-1]
+            self.window = np.reshape(temp_window, (-1, temp_window.shape[-1]), order="C")
+
+        except:
+            raise Exception("File for snapshots not found")
     
     def update_residualSampling_window(self):
         pass

@@ -65,7 +65,7 @@ def main():
             
             # Advance one physical time step
             if solver.calc_rom:
-                    rom_domain.advance_iter(sol_domain, solver)
+                rom_domain.advance_iter(sol_domain, solver)
             else:
                 sol_domain.advance_iter(solver)
             
