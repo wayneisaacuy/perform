@@ -413,7 +413,7 @@ class SolutionDomain:
             sol_int.wf[:, samp_idxs] = wf
 
             sol_int.rhs[3:, samp_idxs] += sol_int.source[:, samp_idxs]
-
+            
     def calc_cell_gradients(self):
         """Compute cell-centered gradients and gradient limiters for higher-order face reconstructions.
 

@@ -5,6 +5,7 @@ from perform.constants import REAL_TYPE
 from perform.input_funcs import catch_input
 from perform.time_integrator.time_integrator import TimeIntegrator
 
+import copy
 
 class ImplicitIntegrator(TimeIntegrator):
     """Base class for implicit time integrators.
@@ -109,17 +110,40 @@ class BDF(ImplicitIntegrator):
 
         return residual
 
-    def calc_fullydiscrhs(self, sol_hist, rhs, solver, samp_idxs=np.s_[:]):
+    def calc_fullydiscrhs(self, sol_domain, stateArg, solver, samp_idxs=np.s_[:]):
         """Compute fully discrete rhs
+        
+            stateArg is a column vector
         """
         
         assert self.time_order < 2, "BDF order has to be 1, backward Euler only"
+        
+        # make a deep copy of sol_domain
+        
+        copy_sol_domain = copy.deepcopy(sol_domain)
+        
+        # reshape stateArg
+        
+        stateArg = stateArg.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+        
+        # update sol_cons and sol_prim
+        
+        copy_sol_domain.sol_int.sol_cons = stateArg
+        copy_sol_domain.sol_int.update_state(from_cons=True)
+        
+        # compute rhs 
+        
+        copy_sol_domain.calc_rhs(solver)
+        
+        rhs = sol_domain.sol_int.rhs # shape will be num_eqs x num_cells
+        
+        # calculate semi-discrete rhs here
         
         # Account for cold start
         time_order = min(solver.iter, self.time_order)
 
         coeffs = self.coeffs[time_order - 1]
         
-        fullydiscrhs = coeffs[0] * sol_hist[0][:, samp_idxs] - self.dt * 
+        fullydiscrhs = coeffs[0] * stateArg[:, samp_idxs] - self.dt * rhs[:, samp_idxs]
         
         return fullydiscrhs
