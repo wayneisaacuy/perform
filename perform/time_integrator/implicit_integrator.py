@@ -108,3 +108,18 @@ class BDF(ImplicitIntegrator):
         residual = -(residual / self.dt) + rhs[:, samp_idxs]
 
         return residual
+
+    def calc_fullydiscrhs(self, sol_hist, rhs, solver, samp_idxs=np.s_[:]):
+        """Compute fully discrete rhs
+        """
+        
+        assert self.time_order < 2, "BDF order has to be 1, backward Euler only"
+        
+        # Account for cold start
+        time_order = min(solver.iter, self.time_order)
+
+        coeffs = self.coeffs[time_order - 1]
+        
+        fullydiscrhs = coeffs[0] * sol_hist[0][:, samp_idxs] - self.dt * 
+        
+        return fullydiscrhs
