@@ -71,18 +71,37 @@ class AdaptROM():
         except:
             raise Exception("File for snapshots not found")
     
-    def update_residualSampling_window(self, solver, rom_domain):
+    def cycle_window(self, NewState):
+        """ Cycles the window and add new state
+        """
+        
+        # nCols = self.window.shape[1]
+        tempWindow = self.window.copy()
+        tempWindow = tempWindow[:,:-1]
+        
+        self.window = np.concatenate((NewState,tempWindow), axis=1)
+        
+    
+    def update_residualSampling_window(self, solver, rom_domain, sol_domain):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
         # compute Q[:,k]
+        Q_k_temp = np.zeros((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells))
+        
+        for model_idx, model in enumerate(rom_domain.model_list):
+            Q_k_temp[model.var_idxs, :] = model.decode_sol(model.code)
+        
+        Q_k = Q_k_temp.reshape((-1,1))
         
         if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
             
             # compute F[:,k]
+            F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             
             # compute R_k
             
             # find s_k and \breve{s}_k
+            
             pass
         else:
             pass
