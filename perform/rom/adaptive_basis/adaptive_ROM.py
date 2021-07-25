@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from scipy.linalg import orth
+import scipy.linalg as LA
+#from scipy.linalg import orth
 
 
 class AdaptROM():
@@ -131,10 +132,52 @@ class AdaptROM():
             
             # update window
 
+            self.cycle_window(F_k)
             
+    def adeim(self, trial_basis, deim_idx_flat, deim_dim, nMesh, rom_domain):
+        
+        r = rom_domain.adaptiveROMUpdateRank
+        Fp = self.window[deim_idx_flat, :]
+        FS = self.window[self.residual_samplepts, :]
             
-    def adeim(self):
-        pass
+        C = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp) # not sure if it should be solve or lstsq
+        R = trial_basis[self.residual_samplepts, :] @ C - FS
+        
+        _, Sv, Srh = np.linalg.svd(R)
+        Sr = Srh.T
+        
+        CT_pinv = np.linalg.pinv(C.T)
+        
+        r = min(r, len(Sv))
+        
+        for i in range(r):
+            alfa = -R @ Sr[:, i:i+1]
+            beta = CT_pinv @ Sr[:, i:i+1]
+            trial_basis[self.residual_samplepts, :] = trial_basis[self.residual_samplepts, :] + alfa @ beta.T
+            
+        # orthogonalize basis
+            
+        trial_basis, _ = np.linalg.qr(trial_basis)    
+        
+        # apply qdeim
+            
+        _, _, sampling = LA.qr(trial_basis.T, pivoting=True)
+        sampling_trunc = sampling[:deim_dim]
+        
+        # take modulo of deim sampling points 
+        sampling_id = np.remainder(sampling_trunc, nMesh)
+        sampling_id = np.unique(sampling_id)
+        
+        ctr = 0
+        while sampling_id.shape[0] < deim_dim:
+            # get the next sampling index
+            sampling_id = np.append(sampling_id, sampling[deim_dim + ctr])
+        
+            # ensure all entries are unique
+            sampling_id = np.unique(sampling_id)
+            ctr = ctr + 1
+        
+        return trial_basis, sampling_id
 
     def initializeLookBackWindow(self, romDomain, model):
 
