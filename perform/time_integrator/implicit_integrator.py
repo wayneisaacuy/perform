@@ -113,7 +113,7 @@ class BDF(ImplicitIntegrator):
     def calc_fullydiscrhs(self, sol_domain, stateArg, solver, samp_idxs=np.s_[:]):
         """Compute fully discrete rhs
         
-            stateArg is a column vector
+            stateArg is a column vector. also returns a column vector
         """
         
         assert self.time_order < 2, "BDF order has to be 1, backward Euler only"
@@ -124,11 +124,11 @@ class BDF(ImplicitIntegrator):
         
         # reshape stateArg
         
-        stateArg = stateArg.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+        stateArg_reshape = stateArg.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
         
         # update sol_cons and sol_prim
         
-        copy_sol_domain.sol_int.sol_cons = stateArg
+        copy_sol_domain.sol_int.sol_cons = stateArg_reshape
         copy_sol_domain.sol_int.update_state(from_cons=True)
         
         # compute rhs 
@@ -137,6 +137,10 @@ class BDF(ImplicitIntegrator):
         
         rhs = sol_domain.sol_int.rhs # shape will be num_eqs x num_cells
         
+        # reshape rhs to be a column vector
+        
+        rhs = rhs.reshape((-1,1))
+        
         # calculate semi-discrete rhs here
         
         # Account for cold start
@@ -144,6 +148,8 @@ class BDF(ImplicitIntegrator):
 
         coeffs = self.coeffs[time_order - 1]
         
-        fullydiscrhs = coeffs[0] * stateArg[:, samp_idxs] - self.dt * rhs[:, samp_idxs]
+        # fullydiscrhs = coeffs[0] * stateArg[:, samp_idxs] - self.dt * rhs[:, samp_idxs]
+
+        fullydiscrhs = coeffs[0] * stateArg[samp_idxs, :] - self.dt * rhs[samp_idxs, :]
         
         return fullydiscrhs
