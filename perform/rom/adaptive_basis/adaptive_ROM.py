@@ -90,6 +90,9 @@ class AdaptROM():
         
         for model_idx, model in enumerate(rom_domain.model_list):
             Q_k_temp[model.var_idxs, :] = model.decode_sol(model.code)
+            # extract flattened indices. only works for vector ROM!
+            deim_idx_flat = model.direct_samp_idxs_flat
+            trial_basis = model.trial_basis
         
         Q_k = Q_k_temp.reshape((-1,1))
         
@@ -98,11 +101,21 @@ class AdaptROM():
             # compute F[:,k]
             F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             
+            # update window
+            if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
+                self.cycle_window(F_k)
+            else:
+                self.window = np.concatenate((F_k,self.window), axis=1)
+            
             # compute R_k
+            R_k = self.window - (trial_basis @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ self.window[deim_idx_flat , :])    
             
             # find s_k and \breve{s}_k
+            sorted_idxs = np.argsort(-np.sum(R_k**2,axis=1))
             
-            pass
+            self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
+            self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
+            
         else:
             pass
     
