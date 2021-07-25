@@ -100,6 +100,7 @@ class AdaptROM():
             
             # compute F[:,k]
             F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+            # F_k = F_k.reshape((-1,1))
             
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
@@ -117,8 +118,21 @@ class AdaptROM():
             self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
             
         else:
-            pass
-    
+            
+            F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
+            
+            # extract components from Q_k
+            sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
+            sampled_StateArg[self.residual_samplepts,:] = Q_k[self.residual_samplepts,:]
+            
+            # now call the rhs function
+            F_k[self.residual_samplepts, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, sampled_StateArg, solver, self.residual_samplepts)
+            F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
+            
+            # update window
+
+            
+            
     def adeim(self):
         pass
 
