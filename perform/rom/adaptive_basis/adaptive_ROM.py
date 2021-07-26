@@ -13,6 +13,8 @@ class AdaptROM():
         # initialize_window
         
         # this assumes vector construction of ROM
+        # these initializations need to be changed for the scalar ROM case
+        
         self.window = np.zeros((4*sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(4*sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
@@ -41,18 +43,19 @@ class AdaptROM():
         self.window = np.concatenate((NewState,tempWindow), axis=1)
         
     
-    def update_residualSampling_window(self, solver, rom_domain, sol_domain):
+    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
         # compute Q[:,k]
-        Q_k_temp = np.zeros((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells))
+        #Q_k_temp = np.zeros((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells))
         
-        for model_idx, model in enumerate(rom_domain.model_list):
-            Q_k_temp[model.var_idxs, :] = model.decode_sol(model.code)
+        #for model_idx, model in enumerate(rom_domain.model_list):
+            #Q_k_temp[model.var_idxs, :] = model.decode_sol(model.code)
             # extract flattened indices. only works for vector ROM!
-            deim_idx_flat = model.direct_samp_idxs_flat
-            trial_basis = model.trial_basis
+            #deim_idx_flat = model.direct_samp_idxs_flat
+            #trial_basis = model.trial_basis
         
+        Q_k_temp = decoded_ROM
         Q_k = Q_k_temp.reshape((-1,1))
         
         if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
@@ -92,7 +95,7 @@ class AdaptROM():
 
             self.cycle_window(F_k)
             
-    def adeim(self, trial_basis, deim_idx_flat, deim_dim, nMesh, rom_domain):
+    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
         
         r = rom_domain.adaptiveROMUpdateRank
         Fp = self.window[deim_idx_flat, :]

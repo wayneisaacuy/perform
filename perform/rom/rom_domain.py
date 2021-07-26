@@ -277,15 +277,23 @@ class RomDomain:
                         model.adapt.init_window(self)
                     
                 for model_idx, model in enumerate(self.model_list):
-                    pass
-                # call update_residualSampling_window
+                    deim_idx_flat = model.direct_samp_idxs_flat
+                    trial_basis = model.trial_basi
+                    decoded_ROM = model.decode_sol(model.code)
+                    deim_dim = model.hyper_reduc_dim
+                    
+                    # update residual sampling points
+                    
+                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM)
+                    
+                    # call adeim
+                    
+                    updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                 
-                # call adeim 
                 
-                # update quantities that depend on the basis and the interpolation points
+                # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
                 
                 # update basis here
-                print("adaptive")
 
     def advance_subiter(self, sol_domain, solver):
         """Advance low-dimensional state and full solution forward one subiteration of time integrator.
