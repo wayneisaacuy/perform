@@ -159,7 +159,7 @@ class RomDomain:
         self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
 
         self.set_model_flags()
-
+        breakpoint()
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
@@ -174,6 +174,13 @@ class RomDomain:
                 # Set up adaptive basis, if necessary
                 
                 if self.adaptiveROM:
+                    
+                    # check that the time scheme is bdf
+                    assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
+                    
+                    # check that the time order of bdf scheme is 1
+                    assert solver.param_dict['time_order'] == 1, "Adaptive basis rhs evaluation needs backward Euler discretization"
+                    
                     self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
                     #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
