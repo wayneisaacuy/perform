@@ -151,3 +151,13 @@ class LinearProjROM(ProjectionROM):
         sol = self.trial_basis @ code
         sol = np.reshape(sol, (self.num_vars, -1), order="C")
         return sol
+
+    def flatten_deim_idxs(self, rom_domain, sol_domain):
+        
+        self.direct_samp_idxs_flat = np.zeros(rom_domain.num_samp_cells * self.num_vars, dtype=np.int32)
+        for var_num in range(self.num_vars):
+            idx1 = var_num * rom_domain.num_samp_cells
+            idx2 = (var_num + 1) * rom_domain.num_samp_cells
+            self.direct_samp_idxs_flat[idx1:idx2] = (
+                rom_domain.direct_samp_idxs + var_num * sol_domain.mesh.num_cells
+            )

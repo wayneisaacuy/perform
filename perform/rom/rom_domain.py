@@ -159,7 +159,7 @@ class RomDomain:
         self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
 
         self.set_model_flags()
-        breakpoint()
+
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
@@ -170,7 +170,7 @@ class RomDomain:
                 self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
                 
                 self.load_hyper_reduc(sol_domain)
-                
+
                 # Set up adaptive basis, if necessary
                 
                 if self.adaptiveROM:
@@ -180,6 +180,24 @@ class RomDomain:
                     
                     # check that the time order of bdf scheme is 1
                     assert solver.param_dict['time_order'] == 1, "Adaptive basis rhs evaluation needs backward Euler discretization"
+                    
+                    # check that ROM and hyperreduction dimensions are the same
+                    assert np.abs(np.asarray(self.hyper_reduc_dims) - np.asarray(self.latent_dims)).max() == 0, "ROM and hyperreduction basis dimensions must be the same"
+                    
+                    # check that the ROM and hyperreduction bases are the same
+                    
+                    ROMDEIM_basis_same = 1
+                    for idx in range(self.num_models):
+                        rom_basis = np.load(self.model_files[idx])
+                        rom_basis = rom_basis[:,:,:self.latent_dims[idx]]
+                        deim_basis = np.load(self.hyper_reduc_files[idx])
+                        deim_basis = deim_basis[:,:,:self.hyper_reduc_dims[idx]]
+                        
+                        if not np.allclose(rom_basis, deim_basis):
+                            ROMDEIM_basis_same = 0
+                            break
+                    
+                    assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
                     
                     self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
@@ -285,7 +303,7 @@ class RomDomain:
                     
                 for model_idx, model in enumerate(self.model_list):
                     deim_idx_flat = model.direct_samp_idxs_flat
-                    trial_basis = model.trial_basi
+                    trial_basis = model.trial_basis
                     decoded_ROM = model.decode_sol(model.code)
                     deim_dim = model.hyper_reduc_dim
                     
@@ -297,6 +315,12 @@ class RomDomain:
                     
                     updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                 
+                    # update deim interpolation points
+                    model.flatten_deim_idxs(self, sol_domain)
+                    
+                    # update basis. make sure to update the deim basis too
+                    
+                    model.update_basis(updated_basis, self)
                 
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
                 
