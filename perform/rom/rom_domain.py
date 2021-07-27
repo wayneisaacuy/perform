@@ -316,12 +316,16 @@ class RomDomain:
                     updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                 
                     # update deim interpolation points
+                    # update rom_domain and sol_domain attributes. call method below to update rest
+                    self.direct_samp_idxs = updated_interp_pts
+                    sol_domain.direct_samp_idxs = updated_interp_pts
                     model.flatten_deim_idxs(self, sol_domain)
                     
                     # update basis. make sure to update the deim basis too
                     
                     model.update_basis(updated_basis, self)
                 
+                self.compute_cellidx_hyper_reduc(sol_domain)
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
                 
                 # update basis here
