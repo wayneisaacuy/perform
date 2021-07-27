@@ -138,4 +138,6 @@ class AdaptROM():
             sampling_id = np.unique(sampling_id)
             ctr = ctr + 1
         
+        sampling_id = np.sort(sampling_id)
+        
         return trial_basis, sampling_id
