@@ -7,7 +7,7 @@ init_file = "./inputs/steady_init.npy"
 dt            = 1.0e-8
 num_steps     = 4000
 time_scheme   = "bdf"
-time_order    = 2
+time_order    = 1
 dual_time     = False
 
 # space discretization

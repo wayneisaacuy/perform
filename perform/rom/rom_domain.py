@@ -327,8 +327,6 @@ class RomDomain:
                 
                 self.compute_cellidx_hyper_reduc(sol_domain)
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
-                
-                # update basis here
 
     def advance_subiter(self, sol_domain, solver):
         """Advance low-dimensional state and full solution forward one subiteration of time integrator.
@@ -570,7 +568,7 @@ class RomDomain:
 
         self.compute_cellidx_hyper_reduc(sol_domain)
 
-    def compute_cellidx_hyper_reduc(self,sol_domain):
+    def compute_cellidx_hyper_reduc(self, sol_domain):
         
         # moved part of load_hyper_reduc here so that this function can be called if DEIM interpolation points are adapted
         
