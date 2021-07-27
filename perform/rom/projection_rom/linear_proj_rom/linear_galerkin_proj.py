@@ -97,3 +97,23 @@ class LinearGalerkinProj(LinearProjROM):
         d_code = np.linalg.solve(lhs, rhs)
 
         return d_code, lhs, rhs
+
+    def update_basis(self, new_basis, rom_domain):
+        
+        self.trial_basis = new_basis
+        
+        if not rom_domain.time_integrator.time_type == "explicit":
+            # precompute scaled trial basis
+            self.trial_basis_scaled = self.trial_basis * self.norm_fac_prof_cons.ravel(order="C")[:, None]
+            
+        if self.hyper_reduc:
+            
+            self.hyper_reduc_basis = new_basis
+            # procompute hyper-reduction projector, V^T * U * [S^T * U]^+
+            # self.hyper_reduc_operator = (
+            #     self.trial_basis.T
+            #     @ self.hyper_reduc_basis
+            #     @ np.linalg.pinv(self.hyper_reduc_basis[self.direct_samp_idxs_flat, :])
+            # )
+            self.hyper_reduc_operator = np.linalg.pinv(self.hyper_reduc_basis[self.direct_samp_idxs_flat, :])
+            
