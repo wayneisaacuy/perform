@@ -83,14 +83,26 @@ class AdaptROM():
             
             F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
             
-            # extract components from Q_k
-            sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
-            sampled_StateArg[self.residual_samplepts,:] = Q_k[self.residual_samplepts,:]
+            # take the union of s_k and p_k
+            idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
+            idx_union = np.unique(idx_union)
+            idx_union = np.argsort(idx_union)
+            
+            # first evaluate the fully discrete RHS
+            # note that the computationally efficient approach would be to only evaluate
+            
+            F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
+            
+            # # extract components from Q_k
+            # sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
+            # sampled_StateArg[self.residual_samplepts,:] = Q_k[self.residual_samplepts,:]
             
             # now call the rhs function
-            F_k[self.residual_samplepts, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, sampled_StateArg, solver, self.residual_samplepts)
-            F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
+            # F_k[self.residual_samplepts, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, sampled_StateArg, solver, self.residual_samplepts)
+            # F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
             
+            F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
+
             # update window
 
             self.cycle_window(F_k)
