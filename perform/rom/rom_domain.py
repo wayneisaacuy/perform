@@ -198,14 +198,14 @@ class RomDomain:
                             break
                     
                     assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
-                    
+
                     self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
                     #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
                     self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
                     #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                     #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
-                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", 4*sol_domain.mesh.num_cells)
+                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs*sol_domain.mesh.num_cells)
                     self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
 
         # Get time integrator, if necessary
