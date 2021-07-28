@@ -41,7 +41,7 @@ class LinearGalerkinProj(LinearProjROM):
             )
 
         if rom_domain.adaptiveROM: 
-            self.adapt = AdaptROM(self, solver, rom_domain, sol_domain)
+            self.adapt = AdaptROM(solver, rom_domain, sol_domain)
 
     def calc_projector(self, sol_domain):
         """Compute RHS projection operator.

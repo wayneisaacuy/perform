@@ -46,7 +46,7 @@ def main():
 
     # Initialize plots
     visGroup = VisualizationGroup(sol_domain, solver)
-
+    
     # ----- End setup -----
 
     # ----- Start unsteady solution -----

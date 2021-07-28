@@ -3,7 +3,7 @@ import numpy as np
 import scipy.linalg as LA
 
 class AdaptROM():
-    def __init__(self, model, solver, rom_domain, sol_domain):
+    def __init__(self, solver, rom_domain, sol_domain):
 
         # attributes needed:
         # window of high-dim RHS
@@ -15,10 +15,10 @@ class AdaptROM():
         # this assumes vector construction of ROM
         # these initializations need to be changed for the scalar ROM case
         
-        self.window = np.zeros((4*sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
+        self.window = np.zeros((sol_domain.gas_model.num_eqs*sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(4*sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
-        
+
     def init_window(self, rom_domain):
         # this has to be done for every model in model list
         # initializes the window
