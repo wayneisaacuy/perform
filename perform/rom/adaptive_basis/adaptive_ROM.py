@@ -86,7 +86,7 @@ class AdaptROM():
             # take the union of s_k and p_k
             idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
             idx_union = np.unique(idx_union)
-            idx_union = np.argsort(idx_union)
+            idx_union = np.sort(idx_union)
             
             # first evaluate the fully discrete RHS
             # note that the computationally efficient approach would be to only evaluate
