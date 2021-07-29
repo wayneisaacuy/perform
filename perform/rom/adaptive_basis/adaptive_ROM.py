@@ -38,9 +38,9 @@ class AdaptROM():
         
         # nCols = self.window.shape[1]
         tempWindow = self.window.copy()
-        tempWindow = tempWindow[:,:-1]
+        tempWindow = tempWindow[:,1:]
         
-        self.window = np.concatenate((NewState,tempWindow), axis=1)
+        self.window = np.concatenate((tempWindow, NewState), axis=1)
         
     
     def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM):
@@ -54,7 +54,7 @@ class AdaptROM():
             # extract flattened indices. only works for vector ROM!
             #deim_idx_flat = model.direct_samp_idxs_flat
             #trial_basis = model.trial_basis
-        
+
         Q_k_temp = decoded_ROM
         Q_k = Q_k_temp.reshape((-1,1))
         
@@ -68,7 +68,7 @@ class AdaptROM():
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
                 self.cycle_window(F_k)
             else:
-                self.window = np.concatenate((F_k,self.window), axis=1)
+                self.window = np.concatenate((self.window, F_k), axis=1)
             
             # compute R_k
             R_k = self.window - (trial_basis @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ self.window[deim_idx_flat , :])    
@@ -78,7 +78,7 @@ class AdaptROM():
             
             self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
             self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
-            
+
         else:
             
             F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
@@ -112,8 +112,8 @@ class AdaptROM():
         r = rom_domain.adaptiveROMUpdateRank
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
-            
-        C = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp) # not sure if it should be solve or lstsq
+
+        C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
         R = trial_basis[self.residual_samplepts, :] @ C - FS
         
         _, Sv, Srh = np.linalg.svd(R)
@@ -122,14 +122,14 @@ class AdaptROM():
         CT_pinv = np.linalg.pinv(C.T)
         
         r = min(r, len(Sv))
-        
+
         for i in range(r):
             alfa = -R @ Sr[:, i:i+1]
             beta = CT_pinv @ Sr[:, i:i+1]
             trial_basis[self.residual_samplepts, :] = trial_basis[self.residual_samplepts, :] + alfa @ beta.T
             
         # orthogonalize basis
-            
+
         trial_basis, _ = np.linalg.qr(trial_basis)    
         
         # apply qdeim
@@ -140,7 +140,7 @@ class AdaptROM():
         # take modulo of deim sampling points 
         sampling_id = np.remainder(sampling_trunc, nMesh)
         sampling_id = np.unique(sampling_id)
-        
+
         ctr = 0
         while sampling_id.shape[0] < deim_dim:
             # get the next sampling index

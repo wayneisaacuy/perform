@@ -306,7 +306,7 @@ class RomDomain:
                     trial_basis = model.trial_basis
                     decoded_ROM = model.decode_sol(model.code)
                     deim_dim = model.hyper_reduc_dim
-                    
+
                     # update residual sampling points
                     
                     model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM)
