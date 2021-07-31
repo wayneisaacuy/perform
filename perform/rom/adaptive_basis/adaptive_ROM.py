@@ -60,7 +60,7 @@ class AdaptROM():
         self.window = np.concatenate((tempWindow, NewState), axis=1)
         
     
-    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM):
+    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
         # compute Q[:,k]
@@ -81,10 +81,16 @@ class AdaptROM():
             F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             
             # scale snapshot
-            
-            
-            # F_k = F_k.reshape((-1,1))
-            
+            F_k = F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+            F_k = model.scale_profile(F_k, normalize=True,
+                                      norm_fac_prof=model.norm_fac_prof_cons,
+                                      norm_sub_prof=model.norm_sub_prof_cons,
+                                      center=True,
+                                      cent_prof=model.cent_prof_cons,
+                                      inverse=False,
+                                      )
+            F_k = F_k.reshape((-1,1))
+
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
                 self.cycle_window(F_k)
@@ -93,7 +99,7 @@ class AdaptROM():
             
             # compute R_k
             R_k = self.window - (trial_basis @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ self.window[deim_idx_flat , :])    
-            
+
             # find s_k and \breve{s}_k
             sorted_idxs = np.argsort(-np.sum(R_k**2,axis=1))
 
@@ -110,9 +116,24 @@ class AdaptROM():
             idx_union = np.sort(idx_union)
             
             # first evaluate the fully discrete RHS
-            # note that the computationally efficient approach would be to only evaluate
+            # note that the computationally efficient approach would be to only evaluate the right hand side at select components
             
-            F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
+            # F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
+            
+            # inefficient. first evaluate right hand side at all components and only select those components needed
+            temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+            
+            # scale snapshot
+            temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+            temp_F_k = model.scale_profile(temp_F_k, normalize=True,
+                                      norm_fac_prof=model.norm_fac_prof_cons,
+                                      norm_sub_prof=model.norm_sub_prof_cons,
+                                      center=True,
+                                      cent_prof=model.cent_prof_cons,
+                                      inverse=False,
+                                      )
+            temp_F_k = temp_F_k.reshape((-1,1))
+            F_k[idx_union, :] = temp_F_k[idx_union, :]
             
             # # extract components from Q_k
             # sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
