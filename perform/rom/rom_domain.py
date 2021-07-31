@@ -299,7 +299,7 @@ class RomDomain:
                 if solver.time_iter == 1:
                     
                     for model_idx, model in enumerate(self.model_list):
-                        model.adapt.init_window(self)
+                        model.adapt.init_window(self, model)
                     
                 for model_idx, model in enumerate(self.model_list):
                     deim_idx_flat = model.direct_samp_idxs_flat
@@ -309,7 +309,7 @@ class RomDomain:
 
                     # update residual sampling points
                     
-                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM)
+                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model)
                     
                     # call adeim
                     

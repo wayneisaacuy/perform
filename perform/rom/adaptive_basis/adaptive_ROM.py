@@ -19,7 +19,7 @@ class AdaptROM():
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
 
-    def init_window(self, rom_domain):
+    def init_window(self, rom_domain, model):
         # this has to be done for every model in model list
         # initializes the window
         model_dir = rom_domain.model_dir
@@ -27,7 +27,24 @@ class AdaptROM():
         try:
             temp_window = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
             temp_window = temp_window[:,:,:rom_domain.adaptiveROMWindowSize-1]
-            self.window = np.reshape(temp_window, (-1, temp_window.shape[-1]), order="C")
+            
+            temp_window_scaled = np.zeros_like(temp_window)
+            nSnaps = temp_window_scaled.shape[-1]
+            
+            # scale snapshot
+            
+            for i in range(nSnaps):
+                temp_window_scaled[:, :, i] = model.scale_profile(
+                                                    temp_window[:, :, i],
+                                                    normalize=True,
+                                                    norm_fac_prof=model.norm_fac_prof_cons,
+                                                    norm_sub_prof=model.norm_sub_prof_cons,
+                                                    center=True,
+                                                    cent_prof=model.cent_prof_cons,
+                                                    inverse=False,
+                                                    )
+            
+            self.window = np.reshape(temp_window_scaled, (-1, temp_window_scaled.shape[-1]), order="C")
 
         except:
             raise Exception("File for snapshots not found")
@@ -62,6 +79,10 @@ class AdaptROM():
             
             # compute F[:,k]
             F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+            
+            # scale snapshot
+            
+            
             # F_k = F_k.reshape((-1,1))
             
             # update window
@@ -75,12 +96,12 @@ class AdaptROM():
             
             # find s_k and \breve{s}_k
             sorted_idxs = np.argsort(-np.sum(R_k**2,axis=1))
-            
+
             self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
             self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
 
         else:
-            
+
             F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
             
             # take the union of s_k and p_k
@@ -108,7 +129,7 @@ class AdaptROM():
             self.cycle_window(F_k)
             
     def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
-        
+
         r = rom_domain.adaptiveROMUpdateRank
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
@@ -151,5 +172,5 @@ class AdaptROM():
             ctr = ctr + 1
         
         sampling_id = np.sort(sampling_id)
-        
+
         return trial_basis, sampling_id

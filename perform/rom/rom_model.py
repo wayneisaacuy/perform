@@ -164,7 +164,7 @@ class RomModel:
         Returns:
             (De)-centered and/or (de)-normalized copy of arr_in.
         """
-
+        
         arr = arr_in.copy()
 
         assert normalize or center, "Must either (de-)center or (de-)normalize."
