@@ -20,7 +20,43 @@ class AdaptROM():
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
         self.FOM_snapshots = np.array([])
-
+        self.FOM_snapshots_scaled = np.array([])
+        self.rel_proj_err = np.array((0,))
+        self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        
+    def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model):
+        # compute relative projection error
+        
+        # need to scale decoded ROM
+        decoded_ROM = model.scale_profile(decoded_ROM,
+                            normalize=True,
+                            norm_fac_prof=model.norm_fac_prof_cons,
+                            norm_sub_prof=model.norm_sub_prof_cons,
+                            center=True,
+                            cent_prof=model.cent_prof_cons,
+                            inverse=False,
+                            )
+        
+        decoded_ROM = decoded_ROM.reshape((-1,1))
+        decoded_ROM = decoded_ROM[:,0]
+        
+        FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
+        # FOM_sol = FOM_sol.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+        
+        # # need to scale FOM
+        # FOM_sol = model.scale_profile(FOM_sol, normalize=True,
+        #                               norm_fac_prof=model.norm_fac_prof_cons,
+        #                               norm_sub_prof=model.norm_sub_prof_cons,
+        #                               center=True,
+        #                               cent_prof=model.cent_prof_cons,
+        #                               inverse=False,
+        #                               )
+        # FOM_sol = FOM_sol.reshape((-1,1))
+        # FOM_sol = FOM_sol[:,0]
+        
+        proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
+        self.rel_proj_err = np.concatenate((self.rel_proj_err,proj_err))
+        
     def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
         # initializes the window
@@ -29,23 +65,23 @@ class AdaptROM():
         try:
             FOM_snap = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
             self.FOM_snapshots = np.reshape(FOM_snap, (-1, FOM_snap.shape[-1]), order="C")
-            # FOM_snap_scaled = np.zeros_like(FOM_snap)
-            # nSnaps = FOM_snap_scaled.shape[-1]
+            FOM_snap_scaled = np.zeros_like(FOM_snap)
+            nSnaps = FOM_snap_scaled.shape[-1]
             
-            # # scale snapshot
+            # scale snapshot
             
-            # for i in range(nSnaps):
-            #     FOM_snap_scaled[:, :, i] = model.scale_profile(
-            #                                         FOM_snap[:, :, i],
-            #                                         normalize=True,
-            #                                         norm_fac_prof=model.norm_fac_prof_cons,
-            #                                         norm_sub_prof=model.norm_sub_prof_cons,
-            #                                         center=True,
-            #                                         cent_prof=model.cent_prof_cons,
-            #                                         inverse=False,
-            #                                         )
+            for i in range(nSnaps):
+                FOM_snap_scaled[:, :, i] = model.scale_profile(
+                                                    FOM_snap[:, :, i],
+                                                    normalize=True,
+                                                    norm_fac_prof=model.norm_fac_prof_cons,
+                                                    norm_sub_prof=model.norm_sub_prof_cons,
+                                                    center=True,
+                                                    cent_prof=model.cent_prof_cons,
+                                                    inverse=False,
+                                                    )
             
-            # self.FOM_snapshots = np.reshape(FOM_snap_scaled, (-1, FOM_snap_scaled.shape[-1]), order="C")
+            self.FOM_snapshots_scaled = np.reshape(FOM_snap_scaled, (-1, FOM_snap_scaled.shape[-1]), order="C")
 
         except:
             raise Exception("File for snapshots not found")
@@ -91,7 +127,7 @@ class AdaptROM():
         self.window = np.concatenate((tempWindow, NewState), axis=1)
         
     
-    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, use_FOM):
+    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, use_FOM, debugROM):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
         # compute Q[:,k]
@@ -156,7 +192,7 @@ class AdaptROM():
             
             # inefficient. first evaluate right hand side at all components and only select those components needed
             if use_FOM:
-                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
+                temp_F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
             else:
                 temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             
@@ -183,8 +219,10 @@ class AdaptROM():
             F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
 
             # update window
-
-            self.cycle_window(F_k)
+            if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
+                self.cycle_window(F_k)
+            else:
+                self.window = np.concatenate((self.window, F_k), axis=1)
             
     def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
 

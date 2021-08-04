@@ -208,6 +208,7 @@ class RomDomain:
                     self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
                     self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
                     self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
+                    self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
 
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
@@ -302,7 +303,7 @@ class RomDomain:
                     for model_idx, model in enumerate(self.model_list):
                         #model.adapt.init_window(self, model)
                         
-                        if self.adaptiveROMDebug == 1:
+                        if self.adaptiveROMDebug == 1 or self.adaptiveROMuseFOM == 1:
                             model.adapt.load_FOM(self, model)
                     
                 for model_idx, model in enumerate(self.model_list):
@@ -310,10 +311,13 @@ class RomDomain:
                     trial_basis = model.trial_basis
                     decoded_ROM = model.decode_sol(model.code)
                     deim_dim = model.hyper_reduc_dim
-
+                    breakpoint()
+                    # compute projection error
+                    if self.adaptiveROMDebug == 1:
+                        pass
                     # update residual sampling points
                     
-                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMDebug)
+                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMuseFOM, self.adaptiveROMDebug)
                     
                     # call adeim
                     if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
@@ -330,7 +334,8 @@ class RomDomain:
                         model.update_basis(updated_basis, self)
                 
                 if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
-                self.compute_cellidx_hyper_reduc(sol_domain)
+                    self.compute_cellidx_hyper_reduc(sol_domain)
+                    
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
 
     def advance_subiter(self, sol_domain, solver):
