@@ -207,6 +207,7 @@ class RomDomain:
                     #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
                     self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
                     self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
+                    self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
 
         # Get time integrator, if necessary
         # TODO: time_scheme should be specific to RomDomain, not the solver
@@ -299,7 +300,10 @@ class RomDomain:
                 if solver.time_iter == 1:
                     
                     for model_idx, model in enumerate(self.model_list):
-                        model.adapt.init_window(self, model)
+                        #model.adapt.init_window(self, model)
+                        
+                        if self.adaptiveROMDebug == 1:
+                            model.adapt.load_FOM(self, model)
                     
                 for model_idx, model in enumerate(self.model_list):
                     deim_idx_flat = model.direct_samp_idxs_flat
@@ -309,22 +313,23 @@ class RomDomain:
 
                     # update residual sampling points
                     
-                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model)
+                    model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMDebug)
                     
                     # call adeim
-                    
-                    updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
+                    if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
+                        updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                 
-                    # update deim interpolation points
-                    # update rom_domain and sol_domain attributes. call method below to update rest
-                    self.direct_samp_idxs = updated_interp_pts
-                    sol_domain.direct_samp_idxs = updated_interp_pts
-                    model.flatten_deim_idxs(self, sol_domain)
+                        # update deim interpolation points
+                        # update rom_domain and sol_domain attributes. call method below to update rest
+                        self.direct_samp_idxs = updated_interp_pts
+                        sol_domain.direct_samp_idxs = updated_interp_pts
+                        model.flatten_deim_idxs(self, sol_domain)
                     
-                    # update basis. make sure to update the deim basis too
+                        # update basis. make sure to update the deim basis too
                     
-                    model.update_basis(updated_basis, self)
+                        model.update_basis(updated_basis, self)
                 
+                if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
                 self.compute_cellidx_hyper_reduc(sol_domain)
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
 

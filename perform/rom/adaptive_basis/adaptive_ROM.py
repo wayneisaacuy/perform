@@ -15,39 +15,70 @@ class AdaptROM():
         # this assumes vector construction of ROM
         # these initializations need to be changed for the scalar ROM case
         
-        self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
+        #self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
+        self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
+        self.FOM_snapshots = np.array([])
 
-    def init_window(self, rom_domain, model):
+    def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
         # initializes the window
         model_dir = rom_domain.model_dir
         
         try:
-            temp_window = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
-            temp_window = temp_window[:,:,:rom_domain.adaptiveROMWindowSize-1]
+            FOM_snap = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
+            self.FOM_snapshots = np.reshape(FOM_snap, (-1, FOM_snap.shape[-1]), order="C")
+            # FOM_snap_scaled = np.zeros_like(FOM_snap)
+            # nSnaps = FOM_snap_scaled.shape[-1]
             
-            temp_window_scaled = np.zeros_like(temp_window)
-            nSnaps = temp_window_scaled.shape[-1]
+            # # scale snapshot
             
-            # scale snapshot
+            # for i in range(nSnaps):
+            #     FOM_snap_scaled[:, :, i] = model.scale_profile(
+            #                                         FOM_snap[:, :, i],
+            #                                         normalize=True,
+            #                                         norm_fac_prof=model.norm_fac_prof_cons,
+            #                                         norm_sub_prof=model.norm_sub_prof_cons,
+            #                                         center=True,
+            #                                         cent_prof=model.cent_prof_cons,
+            #                                         inverse=False,
+            #                                         )
             
-            for i in range(nSnaps):
-                temp_window_scaled[:, :, i] = model.scale_profile(
-                                                    temp_window[:, :, i],
-                                                    normalize=True,
-                                                    norm_fac_prof=model.norm_fac_prof_cons,
-                                                    norm_sub_prof=model.norm_sub_prof_cons,
-                                                    center=True,
-                                                    cent_prof=model.cent_prof_cons,
-                                                    inverse=False,
-                                                    )
-            
-            self.window = np.reshape(temp_window_scaled, (-1, temp_window_scaled.shape[-1]), order="C")
+            # self.FOM_snapshots = np.reshape(FOM_snap_scaled, (-1, FOM_snap_scaled.shape[-1]), order="C")
 
         except:
             raise Exception("File for snapshots not found")
+            
+    # def init_window(self, rom_domain, model):
+    #     # this has to be done for every model in model list
+    #     # initializes the window
+    #     model_dir = rom_domain.model_dir
+        
+    #     try:
+    #         temp_window = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
+    #         temp_window = temp_window[:,:,:rom_domain.adaptiveROMWindowSize-1]
+            
+    #         temp_window_scaled = np.zeros_like(temp_window)
+    #         nSnaps = temp_window_scaled.shape[-1]
+            
+    #         # scale snapshot
+            
+    #         for i in range(nSnaps):
+    #             temp_window_scaled[:, :, i] = model.scale_profile(
+    #                                                 temp_window[:, :, i],
+    #                                                 normalize=True,
+    #                                                 norm_fac_prof=model.norm_fac_prof_cons,
+    #                                                 norm_sub_prof=model.norm_sub_prof_cons,
+    #                                                 center=True,
+    #                                                 cent_prof=model.cent_prof_cons,
+    #                                                 inverse=False,
+    #                                                 )
+            
+    #         self.window = np.reshape(temp_window_scaled, (-1, temp_window_scaled.shape[-1]), order="C")
+
+    #     except:
+    #         raise Exception("File for snapshots not found")
     
     def cycle_window(self, NewState):
         """ Cycles the window and add new state
@@ -60,7 +91,7 @@ class AdaptROM():
         self.window = np.concatenate((tempWindow, NewState), axis=1)
         
     
-    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model):
+    def update_residualSampling_window(self, rom_domain, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, use_FOM):
         # this updates the window and finds the sampling points (and its complement) for the residual
         
         # compute Q[:,k]
@@ -74,12 +105,15 @@ class AdaptROM():
 
         Q_k_temp = decoded_ROM
         Q_k = Q_k_temp.reshape((-1,1))
-        
+        #breakpoint()
         if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
             
             # compute F[:,k]
-            F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
-            
+            if use_FOM:
+                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter]
+            else:
+                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+
             # scale snapshot
             F_k = F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
             F_k = model.scale_profile(F_k, normalize=True,
@@ -121,7 +155,10 @@ class AdaptROM():
             # F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
             
             # inefficient. first evaluate right hand side at all components and only select those components needed
-            temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+            if use_FOM:
+                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
+            else:
+                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             
             # scale snapshot
             temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")

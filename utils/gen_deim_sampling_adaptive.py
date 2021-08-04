@@ -17,7 +17,7 @@ data_file = "spatial_modes_cons_0_1_2_3.npy"
 #var_idxs = [[0], [1], [2], [3]]
 var_idxs = [[0, 1, 2, 3]]
 
-max_modes = 50
+max_modes = 10
 
 #out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/hyperred_input"
 out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/rom_input_AADEIM"
