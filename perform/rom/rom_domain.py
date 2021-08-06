@@ -311,10 +311,10 @@ class RomDomain:
                     trial_basis = model.trial_basis
                     decoded_ROM = model.decode_sol(model.code)
                     deim_dim = model.hyper_reduc_dim
-                    breakpoint()
+
                     # compute projection error
                     if self.adaptiveROMDebug == 1:
-                        pass
+                        model.adapt.compute_relprojerr(decoded_ROM, solver, sol_domain, model)
                     # update residual sampling points
                     
                     model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMuseFOM, self.adaptiveROMDebug)
@@ -332,6 +332,10 @@ class RomDomain:
                         # update basis. make sure to update the deim basis too
                     
                         model.update_basis(updated_basis, self)
+                        
+                    # save debug quantities to file
+                    if solver.time_iter == solver.num_steps:
+                        model.adapt.save_debugstats(self)
                 
                 if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
                     self.compute_cellidx_hyper_reduc(sol_domain)

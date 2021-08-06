@@ -21,8 +21,17 @@ class AdaptROM():
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
         self.FOM_snapshots = np.array([])
         self.FOM_snapshots_scaled = np.array([])
-        self.rel_proj_err = np.array((0,))
+        self.rel_proj_err = np.array([])
         self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        
+    def save_debugstats(self, rom_domain):
+        
+        model_dir = rom_domain.model_dir
+        fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr")
+        np.save(fname_relprojerr, self.rel_proj_err)
+        
+        fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
+        np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
         
     def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model):
         # compute relative projection error
@@ -53,9 +62,9 @@ class AdaptROM():
         #                               )
         # FOM_sol = FOM_sol.reshape((-1,1))
         # FOM_sol = FOM_sol[:,0]
-        
+
         proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
-        self.rel_proj_err = np.concatenate((self.rel_proj_err,proj_err))
+        self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
         
     def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
@@ -161,6 +170,10 @@ class AdaptROM():
                                       )
             F_k = F_k.reshape((-1,1))
 
+            if debugROM:
+                rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
                 self.cycle_window(F_k)
@@ -217,6 +230,10 @@ class AdaptROM():
             # F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
             
             F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
+
+            if debugROM:
+                rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
 
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
