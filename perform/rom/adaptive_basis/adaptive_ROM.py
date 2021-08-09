@@ -65,7 +65,7 @@ class AdaptROM():
 
         proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
         self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
-        
+
     def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
         # initializes the window
@@ -76,7 +76,7 @@ class AdaptROM():
             self.FOM_snapshots = np.reshape(FOM_snap, (-1, FOM_snap.shape[-1]), order="C")
             FOM_snap_scaled = np.zeros_like(FOM_snap)
             nSnaps = FOM_snap_scaled.shape[-1]
-            
+
             # scale snapshot
             
             for i in range(nSnaps):
@@ -240,9 +240,9 @@ class AdaptROM():
                 self.cycle_window(F_k)
             else:
                 self.window = np.concatenate((self.window, F_k), axis=1)
-            
-    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
 
+    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
+        
         r = rom_domain.adaptiveROMUpdateRank
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
