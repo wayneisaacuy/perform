@@ -22,19 +22,29 @@ class AdaptROM():
         self.FOM_snapshots = np.array([])
         self.FOM_snapshots_scaled = np.array([])
         self.rel_proj_err = np.array([])
+        self.rel_proj_err_origspace = np.array([])
+        self.rel_proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
+        self.rel_proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
         self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain):
         
         model_dir = rom_domain.model_dir
-        fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr")
-        np.save(fname_relprojerr, self.rel_proj_err)
+        fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr.npz")
+        np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states)
         
         fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
         np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
         
+        # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
+        # np.save(fname_FOMsolnorm, self.denom_norm)
+        
     def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model):
         # compute relative projection error
+        
+        decoded_ROM_origspace = decoded_ROM.copy()
+        decoded_ROM_origspace = decoded_ROM_origspace.reshape((-1,))
         
         # need to scale decoded ROM
         decoded_ROM = model.scale_profile(decoded_ROM,
@@ -50,6 +60,7 @@ class AdaptROM():
         decoded_ROM = decoded_ROM[:,0]
         
         FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
+        FOM_sol_origspace = self.FOM_snapshots[:,solver.time_iter]
         # FOM_sol = FOM_sol.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
         
         # # need to scale FOM
@@ -62,10 +73,29 @@ class AdaptROM():
         #                               )
         # FOM_sol = FOM_sol.reshape((-1,1))
         # FOM_sol = FOM_sol[:,0]
+        
+        # try something else
 
-        proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
+        reprojROM =  model.trial_basis @ model.code
+        proj_err = LA.norm(FOM_sol - reprojROM)/LA.norm(FOM_sol)
+        proj_err_origspace = LA.norm(FOM_sol_origspace - decoded_ROM_origspace)/LA.norm(FOM_sol_origspace)
+
+        #proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
         self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
-
+        self.rel_proj_err_origspace = np.concatenate((self.rel_proj_err_origspace, np.array([proj_err_origspace])))
+        #self.denom_norm = np.concatenate((self.denom_norm, np.array([LA.norm(FOM_sol)])))
+        
+        proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
+        proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
+        
+        nMesh = sol_domain.mesh.num_cells
+        for idx in range(sol_domain.gas_model.num_eqs):
+            proj_err_states[idx] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
+            proj_err_origspace_states[idx] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
+        
+        # if solver.time_iter == 2000:
+        #     breakpoint()
+                
     def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
         # initializes the window
@@ -89,7 +119,7 @@ class AdaptROM():
                                                     cent_prof=model.cent_prof_cons,
                                                     inverse=False,
                                                     )
-            
+
             self.FOM_snapshots_scaled = np.reshape(FOM_snap_scaled, (-1, FOM_snap_scaled.shape[-1]), order="C")
 
         except:
@@ -266,6 +296,38 @@ class AdaptROM():
 
         trial_basis, _ = np.linalg.qr(trial_basis)    
         
+        # apply qdeim
+            
+        _, _, sampling = LA.qr(trial_basis.T, pivoting=True)
+        sampling_trunc = sampling[:deim_dim]
+        
+        # take modulo of deim sampling points 
+        sampling_id = np.remainder(sampling_trunc, nMesh)
+        sampling_id = np.unique(sampling_id)
+
+        ctr = 0
+        while sampling_id.shape[0] < deim_dim:
+            # get the next sampling index
+            sampling_id = np.append(sampling_id, sampling[deim_dim + ctr])
+        
+            # ensure all entries are unique
+            sampling_id = np.unique(sampling_id)
+            ctr = ctr + 1
+        
+        sampling_id = np.sort(sampling_id)
+
+        return trial_basis, sampling_id
+    
+    def PODbasis(self, deim_dim, nMesh):
+        
+        # compute basis using POD from snapshots
+        U, _, _ = np.linalg.svd(self.window)
+        trial_basis = U[:, :deim_dim]
+        
+        # orthogonalize basis, redundant
+
+        trial_basis, _ = np.linalg.qr(trial_basis)    
+
         # apply qdeim
             
         _, _, sampling = LA.qr(trial_basis.T, pivoting=True)

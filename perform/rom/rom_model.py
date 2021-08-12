@@ -277,7 +277,7 @@ class RomModel:
         Args:
             sol_domain: SolutionDomain with which this RomModel's containing RomDomain is associated.
         """
-
+        
         if self.target_cons:
             sol_domain.sol_int.sol_cons[self.var_idxs, :] = self.decode_sol(self.code)
         else:

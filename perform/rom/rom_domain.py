@@ -321,8 +321,12 @@ class RomDomain:
                     
                     # call adeim
                     if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize:
-                        updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
-                
+                        
+                        if self.adaptiveROMDebug == 0:
+                            updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
+                        else:    
+                            updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells)
+                            
                         # update deim interpolation points
                         # update rom_domain and sol_domain attributes. call method below to update rest
                         self.direct_samp_idxs = updated_interp_pts
