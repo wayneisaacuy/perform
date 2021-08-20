@@ -47,17 +47,17 @@ class AdaptROM():
         decoded_ROM_origspace = decoded_ROM_origspace.reshape((-1,))
         
         # need to scale decoded ROM
-        decoded_ROM = model.scale_profile(decoded_ROM,
-                            normalize=True,
-                            norm_fac_prof=model.norm_fac_prof_cons,
-                            norm_sub_prof=model.norm_sub_prof_cons,
-                            center=True,
-                            cent_prof=model.cent_prof_cons,
-                            inverse=False,
-                            )
+        # decoded_ROM = model.scale_profile(decoded_ROM,
+        #                     normalize=True,
+        #                     norm_fac_prof=model.norm_fac_prof_cons,
+        #                     norm_sub_prof=model.norm_sub_prof_cons,
+        #                     center=True,
+        #                     cent_prof=model.cent_prof_cons,
+        #                     inverse=False,
+        #                     )
         
-        decoded_ROM = decoded_ROM.reshape((-1,1))
-        decoded_ROM = decoded_ROM[:,0]
+        # decoded_ROM = decoded_ROM.reshape((-1,1))
+        # decoded_ROM = decoded_ROM[:,0]
         
         FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
         FOM_sol_origspace = self.FOM_snapshots[:,solver.time_iter]
@@ -90,9 +90,12 @@ class AdaptROM():
         
         nMesh = sol_domain.mesh.num_cells
         for idx in range(sol_domain.gas_model.num_eqs):
-            proj_err_states[idx] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
-            proj_err_origspace_states[idx] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
+            proj_err_states[idx,:] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
+            proj_err_origspace_states[idx,:] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
         
+        self.rel_proj_err_states = np.concatenate((self.rel_proj_err_states, proj_err_states), axis = 1)
+        self.rel_proj_err_origspace_states = np.concatenate((self.rel_proj_err_origspace_states, proj_err_origspace_states), axis = 1)
+
         # if solver.time_iter == 2000:
         #     breakpoint()
                 
