@@ -97,6 +97,14 @@ class RomDomain:
         self.latent_dims = catch_list(rom_dict, "latent_dims", [0], len_highest=self.num_models)
         model_var_idxs = catch_list(rom_dict, "model_var_idxs", [[-1]], len_highest=self.num_models)
 
+        # Load initial rom basis parameters
+        self.initbasis_snapIterEnd = catch_input(rom_dict, "initbasis_snapIterEnd", solver.num_steps )
+        self.initbasis_snapIterStart = catch_input(rom_dict, "initbasis_snapIterStart", 0 )
+        self.initbasis_snapIterSkip = catch_input(rom_dict, "initbasis_snapIterSkip", 1 )
+
+        self.initbasis_centType = catch_input(rom_dict, "initbasis_centType", "mean" )
+        self.initbasis_normType = catch_input(rom_dict, "initbasis_normType", "minmax" )
+
         # Check model parameters
         for i in self.latent_dims:
             assert i > 0, "latent_dims must contain positive integers"
@@ -139,6 +147,15 @@ class RomDomain:
         ), "All entries in model_var_idxs must be unique"
         self.model_var_idxs = model_var_idxs
 
+        self.set_model_flags()
+        
+        # Get time integrator, if necessary
+        # TODO: time_scheme should be specific to RomDomain, not the solver
+        if self.has_time_integrator:
+            self.time_integrator = get_time_integrator(solver.time_scheme, solver.param_dict)
+        else:
+            self.time_integrator = None  # TODO: this might be pointless
+        
         # Load and check model input locations
         self.model_dir = str(rom_dict["model_dir"])
         model_files = rom_dict["model_files"]
@@ -148,7 +165,7 @@ class RomDomain:
             in_file = os.path.join(self.model_dir, model_files[model_idx])
             assert os.path.isfile(in_file), "Could not find model file at " + in_file
             self.model_files[model_idx] = in_file
-
+        #breakpoint()
         # Load standardization profiles, if they are required
         self.cent_ic = catch_input(rom_dict, "cent_ic", False)
         self.norm_sub_cons_in = catch_list(rom_dict, "norm_sub_cons", [""])
@@ -157,8 +174,6 @@ class RomDomain:
         self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
         self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
         self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
-
-        self.set_model_flags()
 
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
@@ -174,7 +189,7 @@ class RomDomain:
                 # Set up adaptive basis, if necessary
                 
                 if self.adaptiveROM:
-                    
+                    raise Exception('Need to clean out dependencies on loading the rom basis')
                     # check that the time scheme is bdf
                     assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
                     
@@ -210,13 +225,6 @@ class RomDomain:
                     self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                     self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                     self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
-
-        # Get time integrator, if necessary
-        # TODO: time_scheme should be specific to RomDomain, not the solver
-        if self.has_time_integrator:
-            self.time_integrator = get_time_integrator(solver.time_scheme, solver.param_dict)
-        else:
-            self.time_integrator = None  # TODO: this might be pointless
 
         # check init files
         self.low_dim_init_files = catch_list(rom_dict, "low_dim_init_files", [""])
