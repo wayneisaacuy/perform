@@ -155,25 +155,45 @@ class RomDomain:
             self.time_integrator = get_time_integrator(solver.time_scheme, solver.param_dict)
         else:
             self.time_integrator = None  # TODO: this might be pointless
+            
+        # check init files
+        self.low_dim_init_files = catch_list(rom_dict, "low_dim_init_files", [""])
+        if (len(self.low_dim_init_files) != 1) or (self.low_dim_init_files[0] != ""):
+            assert len(self.low_dim_init_files) == self.num_models, (
+                "If initializing any ROM model from a file, must provide list entries for every model. "
+                + "If you don't wish to initialize from file for a model, input an empty string "
+                " in the list entry."
+            )
+        else:
+            self.low_dim_init_files = [""] * self.num_models
         
-        # Load and check model input locations
-        self.model_dir = str(rom_dict["model_dir"])
-        model_files = rom_dict["model_files"]
-        self.model_files = [None] * self.num_models
-        assert len(model_files) == self.num_models, "Must provide model_files for each model"
-        for model_idx in range(self.num_models):
-            in_file = os.path.join(self.model_dir, model_files[model_idx])
-            assert os.path.isfile(in_file), "Could not find model file at " + in_file
-            self.model_files[model_idx] = in_file
-        #breakpoint()
         # Load standardization profiles, if they are required
         self.cent_ic = catch_input(rom_dict, "cent_ic", False)
-        self.norm_sub_cons_in = catch_list(rom_dict, "norm_sub_cons", [""])
-        self.norm_fac_cons_in = catch_list(rom_dict, "norm_fac_cons", [""])
-        self.cent_cons_in = catch_list(rom_dict, "cent_cons", [""])
-        self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
-        self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
-        self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
+        self.model_dir = str(rom_dict["model_dir"])
+        
+        # check if basis and deim files are provided 
+        if "model_files" in rom_dict:
+            # Load and check model input locations    
+            model_files = rom_dict["model_files"]
+            self.model_files = [None] * self.num_models
+            assert len(model_files) == self.num_models, "Must provide model_files for each model"
+            for model_idx in range(self.num_models):
+                in_file = os.path.join(self.model_dir, model_files[model_idx])
+                assert os.path.isfile(in_file), "Could not find model file at " + in_file
+                self.model_files[model_idx] = in_file
+            
+            breakpoint()
+            # Load standardization profiles, if they are required
+            self.norm_sub_cons_in = catch_list(rom_dict, "norm_sub_cons", [""])
+            self.norm_fac_cons_in = catch_list(rom_dict, "norm_fac_cons", [""])
+            self.cent_cons_in = catch_list(rom_dict, "cent_cons", [""])
+            self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
+            self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
+            self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
+        
+        else:
+            # compute basis and deim here
+            pass
 
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
@@ -189,7 +209,7 @@ class RomDomain:
                 # Set up adaptive basis, if necessary
                 
                 if self.adaptiveROM:
-                    raise Exception('Need to clean out dependencies on loading the rom basis')
+                    raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis')
                     # check that the time scheme is bdf
                     assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
                     
@@ -225,17 +245,6 @@ class RomDomain:
                     self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                     self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                     self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
-
-        # check init files
-        self.low_dim_init_files = catch_list(rom_dict, "low_dim_init_files", [""])
-        if (len(self.low_dim_init_files) != 1) or (self.low_dim_init_files[0] != ""):
-            assert len(self.low_dim_init_files) == self.num_models, (
-                "If initializing any ROM model from a file, must provide list entries for every model. "
-                + "If you don't wish to initialize from file for a model, input an empty string "
-                " in the list entry."
-            )
-        else:
-            self.low_dim_init_files = [""] * self.num_models
 
         # Initialize
         self.model_list = [None] * self.num_models
