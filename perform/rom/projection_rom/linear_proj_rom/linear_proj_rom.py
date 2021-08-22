@@ -82,7 +82,11 @@ class LinearProjROM(ProjectionROM):
 
         # load and check gappy POD basis
         if rom_domain.hyper_reduc:
-            hyper_reduc_basis = np.load(rom_domain.hyper_reduc_files[self.model_idx])
+            
+            if isinstance(rom_domain.hyper_reduc_files[self.model_idx], np.ndarray):
+                hyper_reduc_basis = rom_domain.hyper_reduc_files[self.model_idx]
+            else:
+                hyper_reduc_basis = np.load(rom_domain.hyper_reduc_files[self.model_idx])
 
             assert hyper_reduc_basis.ndim == 3, "Hyper-reduction basis must have three axes"
             assert hyper_reduc_basis.shape[:2] == (

@@ -223,9 +223,7 @@ class RomDomain:
             # compute hyperreduction sampling points
             if self.hyper_reduc:
                 sampling_id = gen_DEIMsampling(self.model_var_idxs, spatial_modes, self.latent_dims[0])
-                self.load_hyper_reduc(sol_domain)
-                
-            raise Exception('Not done editing')
+                self.load_hyper_reduc(sol_domain, samp_idx = sampling_id, hyperred_basis = spatial_modes, hyperred_dims = self.latent_dims)
         
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
@@ -237,7 +235,6 @@ class RomDomain:
             # Set up adaptive basis, if necessary
             
             if self.adaptiveROM:
-                raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis.remember hyperred basis = basis')
                 
                 # check thay hyper reduction is true
                 assert self.hyper_reduc, "Hyper reduction is needed for adaptive basis"
@@ -262,7 +259,7 @@ class RomDomain:
                     rom_basis = rom_basis[:,:,:self.latent_dims[idx]]
                     
                     if isinstance(self.hyper_reduc_files[idx], np.ndarray):
-                        deim_basis = 
+                        deim_basis = self.hyper_reduc_files[idx]
                     else:
                         deim_basis = np.load(self.hyper_reduc_files[idx])
                     deim_basis = deim_basis[:,:,:self.hyper_reduc_dims[idx]]
@@ -623,7 +620,7 @@ class RomDomain:
                 self.hyper_reduc_files[model_idx] = in_file
         else:
             for model_idx in range(self.num_models):
-                self.hyper_reduc_files[model_idx] = 
+                self.hyper_reduc_files[model_idx] = hyperred_basis[model_idx]
 
         # Load hyper reduction dimensions and check validity
         if hyperred_dims != []:
