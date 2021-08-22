@@ -7,8 +7,7 @@ from perform.constants import REAL_TYPE
 from perform.input_funcs import read_input_file, catch_list, catch_input
 from perform.solution.solution_phys import SolutionPhys
 from perform.time_integrator import get_time_integrator
-from perform.rom import get_rom_model
-from rom_domain_basisDEIM_utils import gen_ROMbasis, gen_DEIMsampling
+from perform.rom import get_rom_model, gen_ROMbasis, gen_DEIMsampling
 
 
 class RomDomain:
@@ -190,7 +189,7 @@ class RomDomain:
             self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
             self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
             self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
-        
+            breakpoint()
         else:
             # compute basis and scaling profiles
             spatial_modes, cent_file, norm_sub_file, norm_fac_file = gen_ROMbasis(self.model_dir,

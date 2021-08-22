@@ -60,7 +60,7 @@ def main():
     ctr = 0
     while sampling_id.shape[0] < max_modes:
         # get the next sampling index
-        sampling_id = np.append(sampling_id, sampling[max_modes + ctr])
+        sampling_id = np.append(sampling_id, np.remainder(sampling[max_modes + ctr], nNodes))
         
         # ensure all entries are unique
         sampling_id = np.unique(sampling_id)
