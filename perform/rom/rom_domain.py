@@ -173,6 +173,9 @@ class RomDomain:
         self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
         self.model_dir = str(rom_dict["model_dir"])
         
+        if self.is_intrusive:
+            self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
+        
         # check if basis and deim files are provided 
         if "model_files" in rom_dict:
             # Load and check model input locations    
@@ -189,6 +192,9 @@ class RomDomain:
             self.norm_fac_cons_in = catch_list(rom_dict, "norm_fac_cons", [""])
             self.cent_cons_in = catch_list(rom_dict, "cent_cons", [""])
             
+            if self.hyper_reduc:
+                self.load_hyper_reduc(sol_domain)
+                
             #breakpoint()
         else:
             
@@ -211,66 +217,73 @@ class RomDomain:
             self.norm_sub_cons_in = norm_sub_file
             self.norm_fac_cons_in = norm_fac_file
             
+            for model_idx in range(self.num_models):
+                 self.model_files[model_idx] = spatial_modes[model_idx]
+                
             # compute hyperreduction sampling points
             if self.hyper_reduc:
                 sampling_id = gen_DEIMsampling(self.model_var_idxs, spatial_modes, self.latent_dims[0])
-            
+                self.load_hyper_reduc(sol_domain)
+                
             raise Exception('Not done editing')
         
-
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:
-            self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
-            if self.hyper_reduc:
                 
-                # First check if using adaptive basis
-                # Adaptive basis
-                self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
+            # First check if using adaptive basis
+            # Adaptive basis
+            self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
+            
+            # Set up adaptive basis, if necessary
+            
+            if self.adaptiveROM:
+                raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis.remember hyperred basis = basis')
                 
-                self.load_hyper_reduc(sol_domain)
-
-                # Set up adaptive basis, if necessary
+                # check thay hyper reduction is true
+                assert self.hyper_reduc, "Hyper reduction is needed for adaptive basis"
                 
-                if self.adaptiveROM:
-                    raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis.remember hyperred basis = basis')
-                    # check that the time scheme is bdf
-                    assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
+                # check that the time scheme is bdf
+                assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
+                
+                # check that the time order of bdf scheme is 1
+                assert solver.param_dict['time_order'] == 1, "Adaptive basis rhs evaluation needs backward Euler discretization"
+                
+                # check that ROM and hyperreduction dimensions are the same
+                assert np.abs(np.asarray(self.hyper_reduc_dims) - np.asarray(self.latent_dims)).max() == 0, "ROM and hyperreduction basis dimensions must be the same"
+                
+                # check that the ROM and hyperreduction bases are the same
+                
+                ROMDEIM_basis_same = 1
+                for idx in range(self.num_models):
+                    if isinstance(self.model_files[idx], np.ndarray):
+                        rom_basis = self.model_files[idx]
+                    else:
+                        rom_basis = np.load(self.model_files[idx])
+                    rom_basis = rom_basis[:,:,:self.latent_dims[idx]]
                     
-                    # check that the time order of bdf scheme is 1
-                    assert solver.param_dict['time_order'] == 1, "Adaptive basis rhs evaluation needs backward Euler discretization"
-                    
-                    # check that ROM and hyperreduction dimensions are the same
-                    assert np.abs(np.asarray(self.hyper_reduc_dims) - np.asarray(self.latent_dims)).max() == 0, "ROM and hyperreduction basis dimensions must be the same"
-                    
-                    # check that the ROM and hyperreduction bases are the same
-                    
-                    ROMDEIM_basis_same = 1
-                    for idx in range(self.num_models):
-                        if isinstance(self.model_files[idx], np.ndarray):
-                            rom_basis = self.model_files[idx]
-                        else:
-                            rom_basis = np.load(self.model_files[idx])
-                        rom_basis = rom_basis[:,:,:self.latent_dims[idx]]
+                    if isinstance(self.hyper_reduc_files[idx], np.ndarray):
+                        deim_basis = 
+                    else:
                         deim_basis = np.load(self.hyper_reduc_files[idx])
-                        deim_basis = deim_basis[:,:,:self.hyper_reduc_dims[idx]]
-                        
-                        if not np.allclose(rom_basis, deim_basis):
-                            ROMDEIM_basis_same = 0
-                            break
+                    deim_basis = deim_basis[:,:,:self.hyper_reduc_dims[idx]]
                     
-                    assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
+                    if not np.allclose(rom_basis, deim_basis):
+                        ROMDEIM_basis_same = 0
+                        break
+                
+                assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
 
-                    self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
-                    self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
-                    #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
-                    self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
-                    #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
-                    self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
-                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
-                    self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
-                    self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
-                    self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
-                    self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
+                self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
+                #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
+                self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
+                #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
+                self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
+                self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
+                self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
+                self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
+                self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
+                self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
 
         # Initialize
         self.model_list = [None] * self.num_models
@@ -555,7 +568,7 @@ class RomDomain:
         # TODO: not strictly true for the non-intrusive models
         assert self.target_cons != self.target_prim, "Model must target either the primitive or conservative variables"
 
-    def load_hyper_reduc(self, sol_domain):
+    def load_hyper_reduc(self, sol_domain, samp_idx = [], hyperred_basis = [], hyperred_dims = []):
         """Loads direct sampling indices and determines cell indices for hyper-reduction array slicing.
 
         Numerous array slicing indices are required for various operations in efficiently computing
@@ -573,15 +586,19 @@ class RomDomain:
 
         # TODO: add some explanations for what each index array accomplishes
 
-        # load and check sample points
-        samp_file = catch_input(self.rom_dict, "samp_file", "")
-        assert samp_file != "", "Must supply samp_file if performing hyper-reduction"
-        samp_file = os.path.join(self.model_dir, samp_file)
-        assert os.path.isfile(samp_file), "Could not find samp_file at " + samp_file
-
-        # Indices of directly sampled cells, within sol_prim/cons
-        # NOTE: assumed that sample indices are zero-indexed
-        sol_domain.direct_samp_idxs = np.load(samp_file).flatten()
+        if samp_idx == []:
+            # load and check sample points
+            samp_file = catch_input(self.rom_dict, "samp_file", "")
+            assert samp_file != "", "Must supply samp_file if performing hyper-reduction"
+            samp_file = os.path.join(self.model_dir, samp_file)
+            assert os.path.isfile(samp_file), "Could not find samp_file at " + samp_file
+    
+            # Indices of directly sampled cells, within sol_prim/cons
+            # NOTE: assumed that sample indices are zero-indexed
+            sol_domain.direct_samp_idxs = np.load(samp_file).flatten()
+        else:
+            sol_domain.direct_samp_idxs = samp_idx.flatten()
+            
         sol_domain.direct_samp_idxs = (np.sort(sol_domain.direct_samp_idxs)).astype(np.int32)
         sol_domain.num_samp_cells = len(sol_domain.direct_samp_idxs)
         assert (
@@ -596,16 +613,23 @@ class RomDomain:
         ), "Sampling indices must be unique"
         
         # Paths to hyper-reduction files (unpacked later)
-        hyper_reduc_files = self.rom_dict["hyper_reduc_files"]
-        self.hyper_reduc_files = [None] * self.num_models
-        assert len(hyper_reduc_files) == self.num_models, "Must provide hyper_reduc_files for each model"
-        for model_idx in range(self.num_models):
-            in_file = os.path.join(self.model_dir, hyper_reduc_files[model_idx])
-            assert os.path.isfile(in_file), "Could not find hyper-reduction file at " + in_file
-            self.hyper_reduc_files[model_idx] = in_file
+        if hyperred_basis == []:
+            hyper_reduc_files = self.rom_dict["hyper_reduc_files"]
+            self.hyper_reduc_files = [None] * self.num_models
+            assert len(hyper_reduc_files) == self.num_models, "Must provide hyper_reduc_files for each model"
+            for model_idx in range(self.num_models):
+                in_file = os.path.join(self.model_dir, hyper_reduc_files[model_idx])
+                assert os.path.isfile(in_file), "Could not find hyper-reduction file at " + in_file
+                self.hyper_reduc_files[model_idx] = in_file
+        else:
+            for model_idx in range(self.num_models):
+                self.hyper_reduc_files[model_idx] = 
 
         # Load hyper reduction dimensions and check validity
-        self.hyper_reduc_dims = catch_list(self.rom_dict, "hyper_reduc_dims", [0], len_highest=self.num_models)
+        if hyperred_dims != []:
+            self.hyper_reduc_dims = hyperred_dims
+        else:
+            self.hyper_reduc_dims = catch_list(self.rom_dict, "hyper_reduc_dims", [0], len_highest=self.num_models)
 
         for i in self.hyper_reduc_dims:
             assert i > 0, "hyper_reduc_dims must contain positive integers"
