@@ -17,7 +17,7 @@ data_file = "spatial_modes_cons_0_1_2_3.npy"
 #var_idxs = [[0], [1], [2], [3]]
 var_idxs = [[0, 1, 2, 3]]
 
-max_modes = 10
+max_modes = 2
 
 #out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/hyperred_input"
 out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/rom_input_AADEIM"
@@ -57,7 +57,7 @@ def main():
     ctr = 0
     while sampling_id.shape[0] < max_modes:
         # get the next sampling index
-        sampling_id = np.append(sampling_id, sampling[max_modes + ctr])
+        sampling_id = np.append(sampling_id, np.remainder(sampling[max_modes + ctr], nNodes))
         
         # ensure all entries are unique
         sampling_id = np.unique(sampling_id)

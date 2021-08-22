@@ -12,8 +12,8 @@ data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/stand
 data_file = "sol_cons_FOM.npy"
 
 iter_start = 0  # zero-indexed starting index for snapshot array
-iter_end = 4000  # zero-indexed ending index for snapshot array
-iter_skip = 1
+iter_end = 40000  # zero-indexed ending index for snapshot array
+iter_skip = 10
 
 # centering method, accepts "init_cond" and "mean"
 #cent_type = "init_cond"

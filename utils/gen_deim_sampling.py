@@ -10,17 +10,20 @@ import scipy.linalg as LA
 
 #data_dir = "~/path/to/data/dir"
 #data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/hyperred_input"
-data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/hyperred_input"
-data_file = "hyperred_modes_0_1_2_3.npy"
+#data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/hyperred_input"
+data_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/rom_input"
+#data_file = "hyperred_modes_0_1_2_3.npy"
+data_file = "spatial_modes_cons_0_1_2_3.npy"
 
 # zero-indexed list of lists for group variables
 #var_idxs = [[0], [1], [2], [3]]
 var_idxs = [[0, 1, 2, 3]]
 
-max_modes = 200
+max_modes = 2
 
 #out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/contact_surface/hyperred_input"
-out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/hyperred_input"
+#out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/hyperred_input"
+out_dir = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame/rom_input"
 
 # ----- END USER INPUT -----
 

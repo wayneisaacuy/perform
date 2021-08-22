@@ -8,6 +8,7 @@ from perform.input_funcs import read_input_file, catch_list, catch_input
 from perform.solution.solution_phys import SolutionPhys
 from perform.time_integrator import get_time_integrator
 from perform.rom import get_rom_model
+from rom_domain_basisDEIM_utils import gen_ROMbasis, gen_DEIMsampling
 
 
 class RomDomain:
@@ -182,7 +183,6 @@ class RomDomain:
                 assert os.path.isfile(in_file), "Could not find model file at " + in_file
                 self.model_files[model_idx] = in_file
             
-            breakpoint()
             # Load standardization profiles, if they are required
             self.norm_sub_cons_in = catch_list(rom_dict, "norm_sub_cons", [""])
             self.norm_fac_cons_in = catch_list(rom_dict, "norm_fac_cons", [""])
@@ -192,7 +192,21 @@ class RomDomain:
             self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
         
         else:
-            # compute basis and deim here
+            # compute basis and scaling profiles
+            spatial_modes, cent_file, norm_sub_file, norm_fac_file = gen_ROMbasis(self.model_dir,
+                                                                                  solver.dt, 
+                                                                                  self.initbasis_snapIterStart, 
+                                                                                  self.initbasis_snapIterEnd,
+                                                                                  self.initbasis_snapIterSkip, 
+                                                                                  self.initbasis_centType, 
+                                                                                  self.initbasis_normType, 
+                                                                                  self.model_var_idxs,
+                                                                                  self.latent_dims)
+            
+            # compute hyperreduction sampling points
+            if self.hyper_reduc:
+                pass
+            
             pass
 
         # Set up hyper-reduction, if necessary
