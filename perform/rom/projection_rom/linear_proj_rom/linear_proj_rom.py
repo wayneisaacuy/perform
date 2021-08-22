@@ -36,12 +36,16 @@ class LinearProjROM(ProjectionROM):
         super().__init__(model_idx, rom_domain, sol_domain, solver)
 
         # load and check trial basis
-        self.trial_basis = np.load(rom_domain.model_files[self.model_idx])
+        if isinstance(rom_domain.model_files[self.model_idx], np.ndarray):
+            self.trial_basis = rom_domain.model_files[self.model_idx]
+        else:
+            self.trial_basis = np.load(rom_domain.model_files[self.model_idx])
         num_vars_basis_in, num_cells_basis_in, num_modes_basis_in = self.trial_basis.shape
 
         assert num_vars_basis_in == self.num_vars, (
             "Basis at "
-            + rom_domain.model_files[self.model_idx]
+            + str(self.model_idx)
+            #+ rom_domain.model_files[self.model_idx]
             + " represents a different number of variables "
             + "than specified by modelVarIdxs ("
             + str(num_vars_basis_in)
@@ -51,7 +55,8 @@ class LinearProjROM(ProjectionROM):
         )
         assert num_cells_basis_in == sol_domain.mesh.num_cells, (
             "Basis at "
-            + rom_domain.model_files[self.model_idx]
+            + str(self.model_idx)
+            #+ rom_domain.model_files[self.model_idx]
             + " has a different number of cells ("
             + str(num_cells_basis_in)
             + " != "
@@ -60,7 +65,8 @@ class LinearProjROM(ProjectionROM):
         )
         assert num_modes_basis_in >= self.latent_dim, (
             "Basis at "
-            + rom_domain.model_files[self.model_idx]
+            + str(self.model_idx)
+            #+ rom_domain.model_files[self.model_idx]
             + " must have at least "
             + str(self.latent_dim)
             + " modes ("

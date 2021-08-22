@@ -191,6 +191,11 @@ class RomDomain:
             
             #breakpoint()
         else:
+            
+            # not yet implemented for ROMs which are not linear
+            if self.rom_method[-7:] == "tfkeras":
+                raise Exception('Automated computation of basis and DEIM sampling points not yet supported for nonlinear ROMs.')
+            
             # compute basis and scaling profiles
             spatial_modes, cent_file, norm_sub_file, norm_fac_file = gen_ROMbasis(self.model_dir,
                                                                                   solver.dt, 
@@ -227,7 +232,7 @@ class RomDomain:
                 # Set up adaptive basis, if necessary
                 
                 if self.adaptiveROM:
-                    raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis')
+                    raise Exception('Need to clean out dependencies on loading the rom basis and also hyperred basis.remember hyperred basis = basis')
                     # check that the time scheme is bdf
                     assert solver.time_scheme == "bdf", "Adaptive basis requires implicit time-stepping"
                     
@@ -241,7 +246,10 @@ class RomDomain:
                     
                     ROMDEIM_basis_same = 1
                     for idx in range(self.num_models):
-                        rom_basis = np.load(self.model_files[idx])
+                        if isinstance(self.model_files[idx], np.ndarray):
+                            rom_basis = self.model_files[idx]
+                        else:
+                            rom_basis = np.load(self.model_files[idx])
                         rom_basis = rom_basis[:,:,:self.latent_dims[idx]]
                         deim_basis = np.load(self.hyper_reduc_files[idx])
                         deim_basis = deim_basis[:,:,:self.hyper_reduc_dims[idx]]
