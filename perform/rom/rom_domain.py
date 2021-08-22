@@ -9,7 +9,6 @@ from perform.solution.solution_phys import SolutionPhys
 from perform.time_integrator import get_time_integrator
 from perform.rom import get_rom_model, gen_ROMbasis, gen_DEIMsampling
 
-
 class RomDomain:
     """Container class for all ROM models to be applied within a given SolutionDomain.
 
@@ -169,6 +168,9 @@ class RomDomain:
         
         # Load standardization profiles, if they are required
         self.cent_ic = catch_input(rom_dict, "cent_ic", False)
+        self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
+        self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
+        self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
         self.model_dir = str(rom_dict["model_dir"])
         
         # check if basis and deim files are provided 
@@ -186,10 +188,8 @@ class RomDomain:
             self.norm_sub_cons_in = catch_list(rom_dict, "norm_sub_cons", [""])
             self.norm_fac_cons_in = catch_list(rom_dict, "norm_fac_cons", [""])
             self.cent_cons_in = catch_list(rom_dict, "cent_cons", [""])
-            self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
-            self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
-            self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
-            breakpoint()
+            
+            #breakpoint()
         else:
             # compute basis and scaling profiles
             spatial_modes, cent_file, norm_sub_file, norm_fac_file = gen_ROMbasis(self.model_dir,
@@ -202,11 +202,16 @@ class RomDomain:
                                                                                   self.model_var_idxs,
                                                                                   self.latent_dims)
             
+            self.cent_cons_in = cent_file
+            self.norm_sub_cons_in = norm_sub_file
+            self.norm_fac_cons_in = norm_fac_file
+            
             # compute hyperreduction sampling points
             if self.hyper_reduc:
-                pass
+                sampling_id = gen_DEIMsampling(self.model_var_idxs, spatial_modes, self.latent_dims[0])
             
-            pass
+            raise Exception('Not done editing')
+        
 
         # Set up hyper-reduction, if necessary
         if self.is_intrusive:

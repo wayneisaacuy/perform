@@ -69,13 +69,20 @@ class RomModel:
         self.cent_prof_cons = None
         self.cent_prof_prim = None
         if rom_domain.has_cons_norm:
-            self.norm_sub_prof_cons = self.load_feature_scaling(
-                os.path.join(model_dir, rom_domain.norm_sub_cons_in[self.model_idx]), default="zeros"
-            )
-
-            self.norm_fac_prof_cons = self.load_feature_scaling(
-                os.path.join(model_dir, rom_domain.norm_fac_cons_in[self.model_idx]), default="ones"
-            )
+            
+            if isinstance(rom_domain.norm_sub_cons_in[self.model_idx], np.ndarray):
+                self.norm_sub_prof_cons = rom_domain.norm_sub_cons_in[self.model_idx]
+            else:
+                self.norm_sub_prof_cons = self.load_feature_scaling(
+                    os.path.join(model_dir, rom_domain.norm_sub_cons_in[self.model_idx]), default="zeros"
+                )
+                
+            if isinstance(rom_domain.norm_fac_cons_in[self.model_idx], np.ndarray):
+                self.norm_fac_prof_cons = rom_domain.norm_fac_cons_in[self.model_idx]
+            else:
+                self.norm_fac_prof_cons = self.load_feature_scaling(
+                    os.path.join(model_dir, rom_domain.norm_fac_cons_in[self.model_idx]), default="ones"
+                )
 
         if rom_domain.has_prim_norm:
             self.norm_sub_prof_prim = self.load_feature_scaling(
@@ -93,9 +100,12 @@ class RomModel:
                 self.cent_prof_cons = sol_domain.sol_int.sol_cons[self.var_idxs, :].copy()
 
             else:
-                self.cent_prof_cons = self.load_feature_scaling(
-                    os.path.join(model_dir, rom_domain.cent_cons_in[self.model_idx]), default="zeros"
-                )
+                if isinstance(rom_domain.cent_cons_in[self.model_idx], np.ndarray):
+                    self.cent_prof_cons = rom_domain.cent_cons_in[self.model_idx]
+                else:
+                    self.cent_prof_cons = self.load_feature_scaling(
+                        os.path.join(model_dir, rom_domain.cent_cons_in[self.model_idx]), default="zeros"
+                    )
 
         if rom_domain.has_prim_cent:
             if rom_domain.cent_ic:
