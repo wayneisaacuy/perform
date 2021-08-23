@@ -4,8 +4,8 @@ mesh_file = "./inputs/mesh_0to0.01_512c.inp"
 init_file = "./inputs/steady_init.npy"
 
 # time discretization
-dt            = 1.0e-8
-num_steps     = 4000
+dt            = 1.0e-10
+num_steps     = 40000
 time_scheme   = "bdf"
 time_order    = 1
 dual_time     = False
@@ -46,7 +46,7 @@ out_interval = 1
 prim_out     = True
 cons_out     = True
 source_out   = False
-rhs_out    = True
+rhs_out    = False
 
 # probe output
 #probe_locs = [0.0025, 0.0075]

@@ -439,7 +439,7 @@ class SolutionInterior(SolutionPhys):
         if solver.rhs_out:
             self.rhs_snap[:, :, store_idx - 1] = self.rhs
 
-    def write_snapshots(self, solver, failed):
+    def write_snapshots(self, solver, failed, param_string = ""):
         """Save snapshot matrices to disk after completed/failed simulation.
 
         Args:

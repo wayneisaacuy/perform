@@ -87,6 +87,10 @@ class RomDomain:
 
     def __init__(self, sol_domain, solver):
 
+        self.param_string = "" # string containing parameters # dimension, AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
+        
+        # if AADEIM, initbasis_snapIterEnd has to be the same as init window size
+        
         rom_dict = read_input_file(solver.rom_inputs)
         self.rom_dict = rom_dict
 
@@ -236,6 +240,8 @@ class RomDomain:
             # Set up adaptive basis, if necessary
             
             if self.adaptiveROM:
+                
+                self.param_string = self.param_string + "_AADEIM_"
                 
                 # check thay hyper reduction is true
                 assert self.hyper_reduc, "Hyper reduction is needed for adaptive basis"
