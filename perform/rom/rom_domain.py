@@ -100,6 +100,12 @@ class RomDomain:
         self.latent_dims = catch_list(rom_dict, "latent_dims", [0], len_highest=self.num_models)
         model_var_idxs = catch_list(rom_dict, "model_var_idxs", [[-1]], len_highest=self.num_models)
 
+        # add rom dimension to parameter string
+        self.param_string = self.param_string + "_dim_"
+        for i in range(len(self.latent_dims)):
+            self.param_string = self.param_string + str(self.latent_dims[i]) + "_"
+        self.param_string = self.param_string[:-1]
+
         # Load initial rom basis parameters
         self.initbasis_snapIterEnd = catch_input(rom_dict, "initbasis_snapIterEnd", solver.num_steps )
         self.initbasis_snapIterStart = catch_input(rom_dict, "initbasis_snapIterStart", 0 )
@@ -282,12 +288,14 @@ class RomDomain:
                 #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
                 self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
-                self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.adaptiveROMWindowSize + 1)
+                self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
                 self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
                 self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                 self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                 self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                
+                assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
 
         # Initialize
         self.model_list = [None] * self.num_models

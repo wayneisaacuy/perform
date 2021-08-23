@@ -96,7 +96,10 @@ def main():
 
     # ----- Start post-processing -----
 
-    sol_domain.write_final_outputs(solver)
+    if rom_domain == None:
+        sol_domain.write_final_outputs(solver)
+    else:
+        sol_domain.write_final_outputs(solver, )
 
     # ----- End post-processing -----
 

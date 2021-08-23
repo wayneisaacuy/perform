@@ -457,7 +457,7 @@ class SolutionInterior(SolutionPhys):
             offset = 2
         final_idx = int((solver.iter - 1) / solver.out_interval) + offset
         
-        params = "_dt_" + str(solver.dt) 
+        params = param_string + "_dt_" + str(solver.dt) 
 
         if solver.prim_out:
             sol_prim_file = os.path.join(unsteady_output_dir, "sol_prim_" + solver.sim_type + params + ".npy")

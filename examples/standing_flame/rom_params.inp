@@ -1,0 +1,38 @@
+# model definition
+rom_method = "linear_galerkin_proj"
+
+num_models     = 1
+latent_dims    = [10]
+model_var_idxs = [[0,1,2,3]]
+model_dir      = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame"
+initbasis_snapIterSkip = 100
+
+#model_files    = ["rom_input_AADEIM/spatial_modes_cons_0_1_2_3.npy"]
+#model_files    = ["rom_input/spatial_modes_0_1_2_3.npy"]
+
+# feature scaling profiles
+#cent_cons     = ["rom_input_AADEIM/cent_prof_cons_0_1_2_3.npy"]
+#cent_cons     = ["rom_input/cent_prof_0_1_2_3.npy"]
+#norm_sub_cons = ["rom_input_AADEIM/norm_sub_prof_cons_0_1_2_3.npy"]
+#norm_sub_cons = ["rom_input/norm_sub_prof_0_1_2_3.npy"]
+#norm_fac_cons = ["rom_input_AADEIM/norm_fac_prof_cons_0_1_2_3.npy"]
+#norm_fac_cons = ["rom_input/norm_fac_prof_0_1_2_3.npy"]
+
+# hyperreduction
+hyper_reduc = True
+#hyper_reduc_dims = [10]
+
+#samp_file = "rom_input_AADEIM/sampling_matrix_2.npy"
+#samp_file = "rom_input/sampling_matrix_2.npy"
+#hyper_reduc_files = ["rom_input_AADEIM/spatial_modes_cons_0_1_2_3.npy"]
+#hyper_reduc_files = ["rom_input/spatial_modes_0_1_2_3.npy"]
+
+# adaptive basis
+adaptiveROM = False
+#adaptiveROMInitTime = 500
+adaptiveROMUpdateFreq = 1000
+adaptiveROMDebug = 1
+adaptiveROMuseFOM = 1
+#adaptiveROMFOMfile = "unsteady_1e-8/sol_cons_FOM.npy"
+#adaptiveROMWindowSize = 50
+# add number of residual sampling points here

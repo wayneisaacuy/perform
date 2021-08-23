@@ -62,4 +62,4 @@ vis_var_1      = ["temperature", "source", "pressure", "velocity"]
 vis_y_bounds_1 = [[0, 2700], [-50000, 2000], [974000, 990000], [-2, 14]]
 
 # ROM flag
-calc_rom = True
+calc_rom = False
