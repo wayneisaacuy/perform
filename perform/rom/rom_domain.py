@@ -87,10 +87,8 @@ class RomDomain:
 
     def __init__(self, sol_domain, solver):
 
-        self.param_string = "" # string containing parameters # dimension, AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
-        
-        # if AADEIM, initbasis_snapIterEnd has to be the same as init window size
-        
+        self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
+          
         rom_dict = read_input_file(solver.rom_inputs)
         self.rom_dict = rom_dict
 
@@ -249,7 +247,7 @@ class RomDomain:
                 
                 self.param_string = self.param_string + "_AADEIM_"
                 
-                # check thay hyper reduction is true
+                # check that hyper reduction is true
                 assert self.hyper_reduc, "Hyper reduction is needed for adaptive basis"
                 
                 # check that the time scheme is bdf
@@ -290,13 +288,24 @@ class RomDomain:
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                 self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
                 self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
-                self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM.npy")
+                self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM_dt_" + str(solver.dt) + ".npy")
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                 self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                 self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
                 
                 assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
-
+                
+                self.param_string = self.param_string + "iw_" + str(self.adaptiveROMInitTime)
+                self.param_string = self.param_string + "_ws_" + str(self.adaptiveROMWindowSize)
+                self.param_string = self.param_string + "_uf_" + str(self.adaptiveROMUpdateFreq)
+                self.param_string = self.param_string + "_res_" + str(self.adaptiveROMnumResSample)
+                self.param_string = self.param_string + "_useFOM_" + str(self.adaptiveROMuseFOM)
+                
+                if self.adaptiveROMADEIMadapt:
+                    self.param_string = self.param_string + "_ADEIM"
+                else:
+                    self.param_string = self.param_string + "_POD"
+                
         # Initialize
         self.model_list = [None] * self.num_models
         for model_idx in range(self.num_models):

@@ -99,7 +99,7 @@ def main():
     if rom_domain == None:
         sol_domain.write_final_outputs(solver)
     else:
-        sol_domain.write_final_outputs(solver, )
+        sol_domain.write_final_outputs(solver, rom_domain.param_string)
 
     # ----- End post-processing -----
 
