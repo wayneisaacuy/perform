@@ -73,7 +73,7 @@ def get_rom_model(model_idx, rom_domain, sol_domain, solver):
 def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_type, var_idxs, max_modes):
 
     # construct data file
-    data_file = "sol_cons_FOM_dt_" + str(dt) + ".npy"
+    data_file = "unsteady_field_results/sol_cons_FOM_dt_" + str(dt) + ".npy"
     
     # load data, subsample
     in_file = os.path.join(data_dir, data_file)

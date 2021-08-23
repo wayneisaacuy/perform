@@ -176,11 +176,12 @@ class RomDomain:
         if self.is_intrusive:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
         
+        self.model_files = [None] * self.num_models
+        
         # check if basis and deim files are provided 
         if "model_files" in rom_dict:
             # Load and check model input locations    
             model_files = rom_dict["model_files"]
-            self.model_files = [None] * self.num_models
             assert len(model_files) == self.num_models, "Must provide model_files for each model"
             for model_idx in range(self.num_models):
                 in_file = os.path.join(self.model_dir, model_files[model_idx])
@@ -222,7 +223,7 @@ class RomDomain:
                 
             # compute hyperreduction sampling points
             if self.hyper_reduc:
-                sampling_id = gen_DEIMsampling(self.model_var_idxs, spatial_modes, self.latent_dims[0])
+                sampling_id = gen_DEIMsampling(self.model_var_idxs, spatial_modes[0], self.latent_dims[0])
                 self.load_hyper_reduc(sol_domain, samp_idx = sampling_id, hyperred_basis = spatial_modes, hyperred_dims = self.latent_dims)
         
         # Set up hyper-reduction, if necessary
@@ -583,7 +584,7 @@ class RomDomain:
 
         # TODO: add some explanations for what each index array accomplishes
 
-        if samp_idx == []:
+        if not isinstance(samp_idx, np.ndarray):
             # load and check sample points
             samp_file = catch_input(self.rom_dict, "samp_file", "")
             assert samp_file != "", "Must supply samp_file if performing hyper-reduction"
@@ -610,9 +611,9 @@ class RomDomain:
         ), "Sampling indices must be unique"
         
         # Paths to hyper-reduction files (unpacked later)
+        self.hyper_reduc_files = [None] * self.num_models
         if hyperred_basis == []:
             hyper_reduc_files = self.rom_dict["hyper_reduc_files"]
-            self.hyper_reduc_files = [None] * self.num_models
             assert len(hyper_reduc_files) == self.num_models, "Must provide hyper_reduc_files for each model"
             for model_idx in range(self.num_models):
                 in_file = os.path.join(self.model_dir, hyper_reduc_files[model_idx])
