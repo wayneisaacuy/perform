@@ -67,8 +67,8 @@ class SystemSolver:
 
     # TODO: time_scheme should not be associated with SystemSolver
 
-    def __init__(self, working_dir):
-
+    def __init__(self, working_dir, dt = None):
+ 
         # input parameters from solverParams.inp
         self.working_dir = working_dir
         param_file = os.path.join(self.working_dir, const.PARAM_INPUTS)
@@ -88,7 +88,11 @@ class SystemSolver:
             self.init_file = None
 
         # temporal discretization
-        self.dt = float(param_dict["dt"])
+        if dt == None:
+            self.dt = float(param_dict["dt"])
+        else:
+            self.dt = dt
+            
         self.time_scheme = str(param_dict["time_scheme"])
         self.run_steady = catch_input(param_dict, "run_steady", False)
         self.num_steps = int(param_dict["num_steps"])
