@@ -311,8 +311,8 @@ class AdaptROM():
         ctr = 0
         while sampling_id.shape[0] < deim_dim:
             # get the next sampling index
-            sampling_id = np.append(sampling_id, np.remanider(sampling[deim_dim + ctr], nMesh))
-        
+            sampling_id = np.append(sampling_id, np.remainder(sampling[deim_dim + ctr], nMesh))
+
             # ensure all entries are unique
             sampling_id = np.unique(sampling_id)
             ctr = ctr + 1

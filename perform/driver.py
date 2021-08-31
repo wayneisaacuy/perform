@@ -41,8 +41,6 @@ def main():
     
     working_dir = os.path.expanduser(parser.parse_args().working_dir)
     assert os.path.isdir(working_dir), "Given working directory does not exist"
-    #breakpoint()
-    # model_dir has to be changed
 
     # Retrieve global solver parameters
     # TODO: multi-domain solvers

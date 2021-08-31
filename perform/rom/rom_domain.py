@@ -189,8 +189,12 @@ class RomDomain:
         self.norm_sub_prim_in = catch_list(rom_dict, "norm_sub_prim", [""])
         self.norm_fac_prim_in = catch_list(rom_dict, "norm_fac_prim", [""])
         self.cent_prim_in = catch_list(rom_dict, "cent_prim", [""])
-        self.model_dir = str(rom_dict["model_dir"])
         
+        if "model_dir" in rom_dict:
+            self.model_dir = str(rom_dict["model_dir"])
+        else:
+            self.model_dir = solver.working_dir
+
         if self.is_intrusive:
             self.hyper_reduc = catch_input(rom_dict, "hyper_reduc", False)
         
@@ -214,7 +218,6 @@ class RomDomain:
             if self.hyper_reduc:
                 self.load_hyper_reduc(sol_domain)
                 
-            #breakpoint()
         else:
             
             # not yet implemented for ROMs which are not linear
@@ -324,7 +327,7 @@ class RomDomain:
                     self.param_string = self.param_string + "_ADEIM"
                 else:
                     self.param_string = self.param_string + "_POD"
-        breakpoint()       
+     
         # Initialize
         self.model_list = [None] * self.num_models
         for model_idx in range(self.num_models):

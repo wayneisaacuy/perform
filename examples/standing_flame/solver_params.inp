@@ -5,7 +5,7 @@ init_file = "./inputs/steady_init.npy"
 
 # time discretization
 dt            = 1.0e-10
-num_steps     = 40000
+num_steps     = 20000
 time_scheme   = "bdf"
 time_order    = 1
 dual_time     = False
