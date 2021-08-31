@@ -2,7 +2,7 @@
 rom_method = "linear_galerkin_proj"
 
 num_models     = 1
-latent_dims    = [10]
+#latent_dims    = [10]
 model_var_idxs = [[0,1,2,3]]
 model_dir      = "/Users/wayneisaacuy/Desktop/NYU/2021/adeimdom/perform/examples/standing_flame"
 initbasis_snapIterSkip = 1
@@ -29,10 +29,10 @@ hyper_reduc = True
 #hyper_reduc_files = ["rom_input/spatial_modes_0_1_2_3.npy"]
 
 # adaptive basis
-adaptiveROM = False
+adaptiveROM = True
 #adaptiveROMInitTime = 500
-adaptiveROMUpdateFreq = 1000
-adaptiveROMADEIMadapt = 0
+#adaptiveROMUpdateFreq = 1000
+adaptiveROMADEIMadapt = 1
 adaptiveROMDebug = 0
 adaptiveROMuseFOM = 1
 #adaptiveROMFOMfile = "unsteady_1e-8/sol_cons_FOM.npy"

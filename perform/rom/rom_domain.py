@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver):
+    def __init__(self, sol_domain, solver, latent_dims = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -95,8 +95,13 @@ class RomDomain:
         # Load model parameters
         self.rom_method = str(rom_dict["rom_method"])
         self.num_models = int(rom_dict["num_models"])
-        self.latent_dims = catch_list(rom_dict, "latent_dims", [0], len_highest=self.num_models)
+        
         model_var_idxs = catch_list(rom_dict, "model_var_idxs", [[-1]], len_highest=self.num_models)
+        
+        if latent_dims == None:
+            self.latent_dims = catch_list(rom_dict, "latent_dims", [0], len_highest=self.num_models)
+        else:
+            self.latent_dims = len(model_var_idxs) * [ latent_dims ]
 
         # add rom dimension to parameter string
         self.param_string = self.param_string + "_dim_"
@@ -105,7 +110,12 @@ class RomDomain:
         self.param_string = self.param_string[:-1]
 
         # Load initial rom basis parameters
-        self.initbasis_snapIterEnd = catch_input(rom_dict, "initbasis_snapIterEnd", solver.num_steps )
+        
+        if init_window_size == None:
+            self.initbasis_snapIterEnd = catch_input(rom_dict, "initbasis_snapIterEnd", solver.num_steps )
+        else:
+            self.initbasis_snapIterEnd = init_window_size
+            
         self.initbasis_snapIterStart = catch_input(rom_dict, "initbasis_snapIterStart", 0 )
         self.initbasis_snapIterSkip = catch_input(rom_dict, "initbasis_snapIterSkip", 1 )
 
@@ -282,9 +292,18 @@ class RomDomain:
                 assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
 
                 self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
-                self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
+                
+                if adapt_update_freq == None:
+                    self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
+                else:
+                    self.adaptiveROMUpdateFreq = adapt_update_freq
                 #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
-                self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
+                
+                if adapt_window_size == None:
+                    self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", max(self.hyper_reduc_dims)+1)
+                else:
+                    self.adaptiveROMWindowSize = adapt_window_size
+                    
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                 self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
                 self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
@@ -305,7 +324,7 @@ class RomDomain:
                     self.param_string = self.param_string + "_ADEIM"
                 else:
                     self.param_string = self.param_string + "_POD"
-                
+        breakpoint()       
         # Initialize
         self.model_list = [None] * self.num_models
         for model_idx in range(self.num_models):

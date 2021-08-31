@@ -20,7 +20,7 @@ from perform.visualization.visualization_group import VisualizationGroup
 from perform.rom.rom_domain import RomDomain
 
 warnings.filterwarnings("error")
-
+# dt, latent_dims, initbasis_snapIterEnd, adaptiveROMUpdateFreq, adaptiveROMWindowSize
 
 def main():
     """Main driver function which initializes all necessary constructs and advances the solution in time"""
@@ -28,19 +28,30 @@ def main():
     # ----- Start setup -----
 
     # Read working directory input
-    parser = argparse.ArgumentParser(description="Read working directory")
+    parser = argparse.ArgumentParser(description="Read working directory and FOM/ROM input parameters")
     parser.add_argument("working_dir", type=str, default="./", help="runtime working directory")
+    # Read additional parameters for the FOM/ROM
+    parser.add_argument("--dt", type=float, help="time step size", default=None)
+    parser.add_argument("--latent_dims", type=int, help="basis dimension", default=None)
+    parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
+    parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
+    parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
+    
+    args = parser.parse_args()
+    
     working_dir = os.path.expanduser(parser.parse_args().working_dir)
     assert os.path.isdir(working_dir), "Given working directory does not exist"
+    #breakpoint()
+    # model_dir has to be changed
 
     # Retrieve global solver parameters
     # TODO: multi-domain solvers
-    solver = SystemSolver(working_dir)
+    solver = SystemSolver(working_dir, args.dt)
 
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:
-        rom_domain = RomDomain(sol_domain, solver)
+        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.init_window_size, args.adapt_window_size, args.adapt_update_freq)
     else:
         rom_domain = None
 
