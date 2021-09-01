@@ -67,7 +67,7 @@ class SystemSolver:
 
     # TODO: time_scheme should not be associated with SystemSolver
 
-    def __init__(self, working_dir, dt = None):
+    def __init__(self, working_dir, dt = None, calc_rom = None):
  
         # input parameters from solverParams.inp
         self.working_dir = working_dir
@@ -136,7 +136,11 @@ class SystemSolver:
         self.probe_vars = []
 
         # ROM flag
-        self.calc_rom = catch_input(param_dict, "calc_rom", False)
+        if calc_rom == None:
+            self.calc_rom = catch_input(param_dict, "calc_rom", False)
+        else:
+            self.calc_rom = bool(calc_rom)
+            
         if not self.calc_rom:
             self.sim_type = "FOM"
         else:

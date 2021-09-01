@@ -31,6 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description="Read working directory and FOM/ROM input parameters")
     parser.add_argument("working_dir", type=str, default="./", help="runtime working directory")
     # Read additional parameters for the FOM/ROM
+    parser.add_argument("--calc_rom", type=int, default=None, help="calculate ROM")
     parser.add_argument("--dt", type=float, help="time step size", default=None)
     parser.add_argument("--latent_dims", type=int, help="basis dimension", default=None)
     parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
@@ -44,7 +45,7 @@ def main():
 
     # Retrieve global solver parameters
     # TODO: multi-domain solvers
-    solver = SystemSolver(working_dir, args.dt)
+    solver = SystemSolver(working_dir, args.dt, args.calc_rom)
 
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
