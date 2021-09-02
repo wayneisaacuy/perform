@@ -28,14 +28,16 @@ class AdaptROM():
         self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
         #self.denom_norm = np.array([])
         
-    def save_debugstats(self, rom_domain):
+    def save_debugstats(self, rom_domain, dt):
         
+        fname_param = "unsteady_field_results/relprojerr" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
         model_dir = rom_domain.model_dir
-        fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr.npz")
+        # fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr.npz")
+        fname_relprojerr = os.path.join(model_dir, fname_param)
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states)
         
-        fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
-        np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
+        # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
+        # np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
         
         # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
         # np.save(fname_FOMsolnorm, self.denom_norm)

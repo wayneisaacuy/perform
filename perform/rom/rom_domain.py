@@ -439,7 +439,7 @@ class RomDomain:
                         
                     # save debug quantities to file
                     if solver.time_iter == solver.num_steps:
-                        model.adapt.save_debugstats(self)
+                        model.adapt.save_debugstats(self, solver.dt)
                 
                 if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime :
                     self.compute_cellidx_hyper_reduc(sol_domain)

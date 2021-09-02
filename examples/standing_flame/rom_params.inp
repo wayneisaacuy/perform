@@ -11,7 +11,7 @@ hyper_reduc = True
 # adaptive basis
 adaptiveROM = True
 adaptiveROMADEIMadapt = 1
-adaptiveROMDebug = 0
+adaptiveROMDebug = 1
 adaptiveROMuseFOM = 1
 
 
