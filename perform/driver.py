@@ -33,6 +33,7 @@ def main():
     # Read additional parameters for the FOM/ROM
     parser.add_argument("--calc_rom", type=int, default=None, help="calculate ROM")
     parser.add_argument("--dt", type=float, help="time step size", default=None)
+    parser.add_argument("--nrsteps", type=int, help="number of time steps", default=None)
     parser.add_argument("--latent_dims", type=int, help="basis dimension", default=None)
     parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
@@ -45,7 +46,7 @@ def main():
 
     # Retrieve global solver parameters
     # TODO: multi-domain solvers
-    solver = SystemSolver(working_dir, args.dt, args.calc_rom)
+    solver = SystemSolver(working_dir, args.dt, args.calc_rom, args.nrsteps)
 
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)

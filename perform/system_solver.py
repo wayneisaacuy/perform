@@ -67,7 +67,7 @@ class SystemSolver:
 
     # TODO: time_scheme should not be associated with SystemSolver
 
-    def __init__(self, working_dir, dt = None, calc_rom = None):
+    def __init__(self, working_dir, dt = None, calc_rom = None, num_steps = None):
  
         # input parameters from solverParams.inp
         self.working_dir = working_dir
@@ -95,7 +95,12 @@ class SystemSolver:
             
         self.time_scheme = str(param_dict["time_scheme"])
         self.run_steady = catch_input(param_dict, "run_steady", False)
-        self.num_steps = int(param_dict["num_steps"])
+        
+        if num_steps == None:
+            self.num_steps = int(param_dict["num_steps"])
+        else:
+            self.num_steps = num_steps
+            
         self.iter = 1
         self.sol_time = 0.0
         self.time_iter = 1
