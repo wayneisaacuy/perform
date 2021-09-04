@@ -38,6 +38,7 @@ def main():
     parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
     parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
+    parser.add_argument("--out_skip", type=int, help="skip interval in saving output", default=None)
     
     args = parser.parse_args()
     
@@ -46,7 +47,7 @@ def main():
 
     # Retrieve global solver parameters
     # TODO: multi-domain solvers
-    solver = SystemSolver(working_dir, args.dt, args.calc_rom, args.nrsteps)
+    solver = SystemSolver(working_dir, args.dt, args.calc_rom, args.nrsteps, args.out_skip)
 
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)

@@ -307,6 +307,10 @@ class RomDomain:
                 else:
                     self.adaptiveROMWindowSize = adapt_window_size
                     
+                # adjust window size if necessary
+                if self.adaptiveROMWindowSize < max(self.hyper_reduc_dims)+1:
+                    self.adaptiveROMWindowSize = max(self.hyper_reduc_dims)+1
+                    
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                 self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
                 self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
@@ -328,6 +332,9 @@ class RomDomain:
                     self.param_string = self.param_string + "_ADEIM"
                 else:
                     self.param_string = self.param_string + "_POD"
+                
+                if solver.out_interval > 1:
+                    self.param_string = self.param_string + "_skip_" + str(solver.out_interval)
      
         # Initialize
         self.model_list = [None] * self.num_models

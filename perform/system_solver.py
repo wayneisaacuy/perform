@@ -67,7 +67,7 @@ class SystemSolver:
 
     # TODO: time_scheme should not be associated with SystemSolver
 
-    def __init__(self, working_dir, dt = None, calc_rom = None, num_steps = None):
+    def __init__(self, working_dir, dt = None, calc_rom = None, num_steps = None, out_skip = None):
  
         # input parameters from solverParams.inp
         self.working_dir = working_dir
@@ -121,7 +121,11 @@ class SystemSolver:
             self.ic_params_file = str(param_dict["ic_params_file"])
 
         # unsteady output
-        self.out_interval = catch_input(param_dict, "out_interval", 1)
+        if out_skip == None:
+            self.out_interval = catch_input(param_dict, "out_interval", 1)
+        else:
+            self.out_interval = out_skip
+            
         self.prim_out = catch_input(param_dict, "prim_out", True)
         self.cons_out = catch_input(param_dict, "cons_out", False)
         self.source_out = catch_input(param_dict, "source_out", False)
