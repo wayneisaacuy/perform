@@ -20,12 +20,17 @@ class AdaptROM():
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
         self.FOM_snapshots = np.array([])
+        self.FOM_snapshots_prim = np.array([])
         self.FOM_snapshots_scaled = np.array([])
         self.rel_proj_err = np.array([])
         self.rel_proj_err_origspace = np.array([])
         self.rel_proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
         self.rel_proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
         self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        
+        self.rel_proj_err_origspace_prim = np.array([])
+        self.rel_proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 0))
+        
         #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain, dt):
@@ -34,7 +39,9 @@ class AdaptROM():
         model_dir = rom_domain.model_dir
         # fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr.npz")
         fname_relprojerr = os.path.join(model_dir, fname_param)
-        np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states)
+        np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
+                 relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
+                 rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim)
         
         # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
         # np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
@@ -42,11 +49,14 @@ class AdaptROM():
         # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
         # np.save(fname_FOMsolnorm, self.denom_norm)
         
-    def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model):
+    def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model, prim_sol):
         # compute relative projection error
         
         decoded_ROM_origspace = decoded_ROM.copy()
         decoded_ROM_origspace = decoded_ROM_origspace.reshape((-1,))
+        
+        curr_prim_sol = prim_sol.copy()
+        curr_prim_sol = curr_prim_sol.reshape((-1,))
         
         # need to scale decoded ROM
         # decoded_ROM = model.scale_profile(decoded_ROM,
@@ -63,6 +73,8 @@ class AdaptROM():
         
         FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
         FOM_sol_origspace = self.FOM_snapshots[:,solver.time_iter]
+        FOM_sol_prim = self.FOM_snapshots_prim[:,solver.time_iter]
+        
         # FOM_sol = FOM_sol.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
         
         # # need to scale FOM
@@ -81,23 +93,28 @@ class AdaptROM():
         reprojROM =  model.trial_basis @ model.code
         proj_err = LA.norm(FOM_sol - reprojROM)/LA.norm(FOM_sol)
         proj_err_origspace = LA.norm(FOM_sol_origspace - decoded_ROM_origspace)/LA.norm(FOM_sol_origspace)
+        proj_err_prim = LA.norm(FOM_sol_prim - curr_prim_sol)/LA.norm(FOM_sol_prim)
 
         #proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
         self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
         self.rel_proj_err_origspace = np.concatenate((self.rel_proj_err_origspace, np.array([proj_err_origspace])))
+        self.rel_proj_err_origspace_prim = np.concatenate((self.rel_proj_err_origspace_prim, np.array([proj_err_prim])))
         #self.denom_norm = np.concatenate((self.denom_norm, np.array([LA.norm(FOM_sol)])))
         
         proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
         proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
+        proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 1))
         
         nMesh = sol_domain.mesh.num_cells
         for idx in range(sol_domain.gas_model.num_eqs):
             proj_err_states[idx,:] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
             proj_err_origspace_states[idx,:] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
+            proj_err_states_prim[idx,:] = LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh] - curr_prim_sol[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh])
         
         self.rel_proj_err_states = np.concatenate((self.rel_proj_err_states, proj_err_states), axis = 1)
         self.rel_proj_err_origspace_states = np.concatenate((self.rel_proj_err_origspace_states, proj_err_origspace_states), axis = 1)
-
+        self.rel_proj_err_states_prim = np.concatenate((self.rel_proj_err_states_prim, proj_err_states_prim), axis = 1)
+        
         # if solver.time_iter == 2000:
         #     breakpoint()
                 
@@ -105,6 +122,8 @@ class AdaptROM():
         # this has to be done for every model in model list
         # initializes the window
         model_dir = rom_domain.model_dir
+        
+        # conservative variables
         
         try:
             FOM_snap = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMfile))
@@ -128,7 +147,17 @@ class AdaptROM():
             self.FOM_snapshots_scaled = np.reshape(FOM_snap_scaled, (-1, FOM_snap_scaled.shape[-1]), order="C")
 
         except:
-            raise Exception("File for snapshots not found")
+            raise Exception("File for snapshots in conservative variables not found")
+        
+        # primitive variables
+        
+        try:
+            FOM_snap_prim = np.load(os.path.join(model_dir, rom_domain.adaptiveROMFOMprimfile))
+            self.FOM_snapshots_prim = np.reshape(FOM_snap_prim, (-1, FOM_snap_prim.shape[-1]), order="C")
+            
+        except:
+            raise Exception("File for snapshots in primitive variables not found")
+
             
     # def init_window(self, rom_domain, model):
     #     # this has to be done for every model in model list

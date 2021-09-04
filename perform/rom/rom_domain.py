@@ -314,6 +314,7 @@ class RomDomain:
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                 self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                 self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                self.adaptiveROMFOMprimfile = catch_input(rom_dict, "adaptiveROMFOMprimfile", "unsteady_field_results/sol_prim_FOM_dt_" + str(solver.dt) + ".npy")
                 
                 assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
                 
@@ -389,7 +390,7 @@ class RomDomain:
 
         sol_domain.sol_int.update_sol_hist()
         self.update_code_hist()
-        
+
         # update basis here
         if self.has_time_integrator:
             if self.adaptiveROM:
@@ -414,7 +415,8 @@ class RomDomain:
 
                     # compute projection error
                     if self.adaptiveROMDebug == 1:
-                        model.adapt.compute_relprojerr(decoded_ROM, solver, sol_domain, model)
+                        model.adapt.compute_relprojerr(decoded_ROM, solver, sol_domain, model, sol_domain.sol_int.sol_prim)
+                    
                     # update residual sampling points
                     
                     model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMuseFOM, self.adaptiveROMDebug)
