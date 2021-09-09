@@ -31,6 +31,8 @@ class AdaptROM():
         self.rel_proj_err_origspace_prim = np.array([])
         self.rel_proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 0))
         
+        self.basis_inc = np.array([])
+        
         #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain, dt):
@@ -41,7 +43,8 @@ class AdaptROM():
         fname_relprojerr = os.path.join(model_dir, fname_param)
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
                  relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
-                 rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim)
+                 rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim,
+                 basis_inc = self.basis_inc)
         
         # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
         # np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
@@ -307,6 +310,7 @@ class AdaptROM():
 
     def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
         
+        old_basis = trial_basis.copy()
         r = rom_domain.adaptiveROMUpdateRank
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
@@ -349,6 +353,9 @@ class AdaptROM():
             ctr = ctr + 1
         
         sampling_id = np.sort(sampling_id)
+        
+        basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
+        self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
 
         return trial_basis, sampling_id
     
