@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -252,8 +252,11 @@ class RomDomain:
                 
             # First check if using adaptive basis
             # Adaptive basis
-            self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
-            
+            if adapt_basis == None:
+                self.adaptiveROM = catch_input(rom_dict, "adaptiveROM", False)
+            else:
+                self.adaptiveROM = bool(adapt_basis)
+                
             # Set up adaptive basis, if necessary
             
             if self.adaptiveROM:
@@ -435,7 +438,7 @@ class RomDomain:
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                         else:    
                             updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells)
-                            
+
                         # update deim interpolation points
                         # update rom_domain and sol_domain attributes. call method below to update rest
                         self.direct_samp_idxs = updated_interp_pts

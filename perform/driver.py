@@ -35,6 +35,7 @@ def main():
     parser.add_argument("--dt", type=float, help="time step size", default=None)
     parser.add_argument("--nrsteps", type=int, help="number of time steps", default=None)
     parser.add_argument("--latent_dims", type=int, help="basis dimension", default=None)
+    parser.add_argument("--adaptive", type=int, default=None, help="adaptive ROM")
     parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
     parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
@@ -52,7 +53,7 @@ def main():
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:
-        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.init_window_size, args.adapt_window_size, args.adapt_update_freq)
+        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq)
     else:
         rom_domain = None
 
