@@ -7,6 +7,7 @@ outskip=5
 nrsteps=20000
 #latentDims=2
 updateFreq=1000
+useADEIM=0
 
 for latentDims in 2 3 4 5
 do
@@ -15,7 +16,7 @@ do
 for adaptWindowSize in 5 10 20 30 50 #5 10 20 30 50
 do
 
-pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --adapt_update_freq $updateFreq --out_skip $outskip"
+pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --adapt_update_freq $updateFreq --out_skip $outskip --ADEIM_update $useADEIM"
 
 done
 done

@@ -40,6 +40,7 @@ def main():
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
     parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
     parser.add_argument("--out_skip", type=int, help="skip interval in saving output", default=None)
+    parser.add_argument("--ADEIM_update", type=int, help="ADEIM for basis update", default=None)
     
     args = parser.parse_args()
     
@@ -53,7 +54,7 @@ def main():
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:
-        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq)
+        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq, args.ADEIM_update)
     else:
         rom_domain = None
 

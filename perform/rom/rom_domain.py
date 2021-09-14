@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -320,8 +320,15 @@ class RomDomain:
                 self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM_dt_" + str(solver.dt) + ".npy")
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                 self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
-                self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                
+                if ADEIM_update == None:
+                    self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                else:
+                    self.adaptiveROMADEIMadapt = ADEIM_update
+                    
                 self.adaptiveROMFOMprimfile = catch_input(rom_dict, "adaptiveROMFOMprimfile", "unsteady_field_results/sol_prim_FOM_dt_" + str(solver.dt) + ".npy")
+                
+                #self.basis_adapted = 0
                 
                 assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
                 
@@ -387,6 +394,12 @@ class RomDomain:
 
         # If method requires numerical time integration
         else:
+            
+            # if self.basis_adapted == 1:
+            #     # change ROM to the new basis
+            #     # update model.code
+            #     # add warning about explicit integrator
+            #     pass
  
             for self.time_integrator.subiter in range(self.time_integrator.subiter_max):
 
@@ -416,6 +429,8 @@ class RomDomain:
                         
                         if self.adaptiveROMDebug == 1 or self.adaptiveROMuseFOM == 1:
                             model.adapt.load_FOM(self, model)
+                            
+                #self.basis_adapted = 0
                     
                 for model_idx, model in enumerate(self.model_list):
                     deim_idx_flat = model.direct_samp_idxs_flat
@@ -455,6 +470,7 @@ class RomDomain:
                 
                 if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime :
                     self.compute_cellidx_hyper_reduc(sol_domain)
+                    #self.basis_adapted = 1
                     
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
 
