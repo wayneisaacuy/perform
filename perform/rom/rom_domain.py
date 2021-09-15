@@ -452,7 +452,7 @@ class RomDomain:
                         if self.adaptiveROMADEIMadapt:
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
                         else:    
-                            updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells)
+                            updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells, trial_basis)
 
                         # update deim interpolation points
                         # update rom_domain and sol_domain attributes. call method below to update rest
