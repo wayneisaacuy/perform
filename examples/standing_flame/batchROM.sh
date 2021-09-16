@@ -1,10 +1,12 @@
-module load python/intel/3.8.6
+#module load python/intel/3.8.6
 
 export PATH="$HOME/uni/apro/mlib:$PATH"
 
-dt=1e-10
+#dt=1e-10
+dt=1e-08
 outskip=5
-nrsteps=20000
+#nrsteps=20000
+nrsteps=4000
 #latentDims=2
 updateFreq=1000
 useADEIM=0
