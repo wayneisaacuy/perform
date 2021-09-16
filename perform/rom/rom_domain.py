@@ -418,9 +418,6 @@ class RomDomain:
         if self.has_time_integrator:
             if self.adaptiveROM:
                 
-                # check that the time integrator is bdf
-                assert solver.time == "bdf", "Adaptive basis not implemented with other time integrators"
-                
                 # check that we are constructing a vector ROM
                 assert len(self.model_list) == 1, "AADEIM only works for vector ROM for now."
 
