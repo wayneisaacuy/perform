@@ -2,7 +2,7 @@ from perform.time_integrator.explicit_integrator import ClassicRK4, SSPRK3, Jame
 from perform.time_integrator.implicit_integrator import BDF
 
 
-def get_time_integrator(time_scheme, param_dict):
+def get_time_integrator(time_scheme, param_dict, solver):
     """Helper function to get time integrator object.
 
     Args:
@@ -14,7 +14,7 @@ def get_time_integrator(time_scheme, param_dict):
     """
 
     if time_scheme == "bdf":
-        time_integrator = BDF(param_dict)
+        time_integrator = BDF(param_dict, solver)
     elif time_scheme == "classic_rk4":
         time_integrator = ClassicRK4(param_dict)
     elif time_scheme == "ssp_rk3":

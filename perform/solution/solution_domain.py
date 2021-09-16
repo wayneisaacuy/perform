@@ -124,7 +124,7 @@ class SolutionDomain:
             num_reactions = self.reaction_model.num_reactions
 
         # Time integrator
-        self.time_integrator = get_time_integrator(solver.time_scheme, param_dict)
+        self.time_integrator = get_time_integrator(solver.time_scheme, param_dict, solver)
 
         # Solutions
         sol_prim_init = get_initial_conditions(self, solver)

@@ -50,7 +50,7 @@ def main():
     # Retrieve global solver parameters
     # TODO: multi-domain solvers
     solver = SystemSolver(working_dir, args.dt, args.calc_rom, args.nrsteps, args.out_skip)
-
+    
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:

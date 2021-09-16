@@ -34,9 +34,9 @@ class ImplicitIntegrator(TimeIntegrator):
         vnn: von Neumann number to adapt dtau based on the mixture kinematic viscosity in each cell.
     """
 
-    def __init__(self, param_dict):
+    def __init__(self, param_dict, solver):
 
-        super().__init__(param_dict)
+        super().__init__(param_dict, solver)
 
         self.time_type = "implicit"
         self.subiter_max = catch_input(param_dict, "subiter_max", const.SUBITER_MAX_IMP_DEFAULT)
@@ -65,8 +65,8 @@ class BDF(ImplicitIntegrator):
         coeffs: List of NumPy arrays of the time derivative discretization coefficients for each order of accuracy.
     """
 
-    def __init__(self, param_dict):
-        super().__init__(param_dict)
+    def __init__(self, param_dict, solver):
+        super().__init__(param_dict, solver)
 
         self.coeffs = [None] * 4
         self.coeffs[0] = np.array([1.0, -1.0], dtype=REAL_TYPE)

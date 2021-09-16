@@ -19,11 +19,14 @@ class TimeIntegrator:
         subiter: Zero-indexed physical time step subiteration number.
     """
 
-    def __init__(self, param_dict):
+    def __init__(self, param_dict, solver=None):
 
-        self.dt = float(param_dict["dt"])
-        self.time_scheme = str(param_dict["time_scheme"])
+        #self.dt = float(param_dict["dt"])
+        #self.time_scheme = str(param_dict["time_scheme"])
         self.time_order = int(param_dict["time_order"])
+        
+        self.dt = solver.dt
+        self.time_scheme = solver.time_scheme
         assert self.time_order >= 1, "time_order only accepts positive integer values."
 
         self.subiter = 0
