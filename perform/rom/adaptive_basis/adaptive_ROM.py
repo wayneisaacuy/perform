@@ -222,7 +222,7 @@ class AdaptROM():
             
             # compute F[:,k]
             if use_FOM:
-                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter]
+                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter].copy()
             else:
                 F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
 

@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -117,7 +117,11 @@ class RomDomain:
             self.initbasis_snapIterEnd = init_window_size
             
         self.initbasis_snapIterStart = catch_input(rom_dict, "initbasis_snapIterStart", 0 )
-        self.initbasis_snapIterSkip = catch_input(rom_dict, "initbasis_snapIterSkip", 1 )
+        
+        if initbasis_snap_skip == None:
+            self.initbasis_snapIterSkip = catch_input(rom_dict, "initbasis_snapIterSkip", 1 )
+        else:
+            self.initbasis_snapIterSkip = initbasis_snap_skip
 
         self.initbasis_centType = catch_input(rom_dict, "initbasis_centType", "mean" )
         self.initbasis_normType = catch_input(rom_dict, "initbasis_normType", "minmax" )
