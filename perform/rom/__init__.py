@@ -87,6 +87,8 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
     norm_sub_file = []
     norm_fac_file = []
     
+    singval_states = []
+    
     # loop through groups
     for group_idx, var_idx_list in enumerate(var_idxs):
 
@@ -105,7 +107,7 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
 
         # compute SVD
         group_arr = np.reshape(group_arr, (-1, group_arr.shape[-1]), order="C")
-        U, s, VT = svd(group_arr)
+        U, singval, VT = svd(group_arr)
         U = np.reshape(U, (num_vars, num_cells, U.shape[-1]), order="C")
 
         # truncate modes
@@ -116,9 +118,19 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
         norm_sub_file.append(norm_sub_prof)
         norm_fac_file.append(norm_fac_prof)
         
+        # compute singular value of each degree of freedom
+        if len(var_idxs) == 1 and group_idx == 0:
+            
+            for idx in range(num_vars):
+                snap_states = group_arr[idx*num_cells:(idx + 1)*num_cells,:]
+                _, Sv_states, _ = np.linalg.svd(snap_states)
+                singval_states.append(Sv_states)
+            
+            singval_states = np.asarray(singval_states)
+        
     print("POD basis generated!")
     
-    return spatial_modes, cent_file, norm_sub_file, norm_fac_file
+    return spatial_modes, cent_file, norm_sub_file, norm_fac_file, singval, singval_states
 
 def gen_DEIMsampling(var_idxs, basis, deim_dim):
     

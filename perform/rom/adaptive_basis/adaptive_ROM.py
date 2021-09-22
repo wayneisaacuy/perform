@@ -33,18 +33,31 @@ class AdaptROM():
         
         self.basis_inc = np.array([])
         
+        self.sing_val = []
+        self.sing_val_states = []
+        
         #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain, dt):
         
-        fname_param = "unsteady_field_results/relprojerr" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
+        # convert singular values list to array
+        self.sing_val = np.asarray(self.sing_val)
+        self.sing_val_states = np.asarray(self.sing_val_states)
+        
         model_dir = rom_domain.model_dir
+        
+        fname_param_relprojerr = "unsteady_field_results/relprojerr" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
+        
         # fname_relprojerr = os.path.join(model_dir, "unsteady_field_results/relprojerr.npz")
-        fname_relprojerr = os.path.join(model_dir, fname_param)
+        fname_relprojerr = os.path.join(model_dir, fname_param_relprojerr)
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
                  relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
                  rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim,
                  basis_inc = self.basis_inc)
+        
+        fname_param_singval = "unsteady_field_results/singval" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
+        fname_singval = os.path.join(model_dir, fname_param_singval)
+        np.savez(fname_singval, sing_val = self.sing_val, sing_val_states = self.sing_val_states, init_singval = rom_domain.init_singval, init_singval_states = rom_domain.init_singval_states)
         
         # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
         # np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
@@ -362,8 +375,20 @@ class AdaptROM():
     def PODbasis(self, deim_dim, nMesh, old_basis):
         
         # compute basis using POD from snapshots
-        U, _, _ = np.linalg.svd(self.window)
+        U, Sv, _ = np.linalg.svd(self.window)
         trial_basis = U[:, :deim_dim]
+        
+        # compute singular values and store
+        self.sing_val.append(Sv)
+        n_dof = self.window.shape[0]//nMesh
+        sing_val_states = []
+        for idx in range(n_dof):
+            window_states = self.window[idx*nMesh:(idx + 1)*nMesh,:]
+            _, Sv_states, _ = np.linalg.svd(window_states)
+            sing_val_states.append(Sv_states)
+        
+        sing_val_states = np.asarray(sing_val_states)
+        self.sing_val_states.append(sing_val_states)
         
         # orthogonalize basis, redundant
 

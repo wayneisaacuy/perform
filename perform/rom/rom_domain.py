@@ -204,6 +204,9 @@ class RomDomain:
         
         self.model_files = [None] * self.num_models
         
+        self.init_singval = np.array([])
+        self.init_singval_states = np.array([])
+        
         # check if basis and deim files are provided 
         if "model_files" in rom_dict:
             # Load and check model input locations    
@@ -229,7 +232,7 @@ class RomDomain:
                 raise Exception('Automated computation of basis and DEIM sampling points not yet supported for nonlinear ROMs.')
             
             # compute basis and scaling profiles
-            spatial_modes, cent_file, norm_sub_file, norm_fac_file = gen_ROMbasis(self.model_dir,
+            spatial_modes, cent_file, norm_sub_file, norm_fac_file, self.init_singval, self.init_singval_states = gen_ROMbasis(self.model_dir,
                                                                                   solver.dt, 
                                                                                   self.initbasis_snapIterStart, 
                                                                                   self.initbasis_snapIterEnd,
