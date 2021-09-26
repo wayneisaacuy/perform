@@ -299,9 +299,9 @@ class AdaptROM():
                 temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
             elif use_FOM == 2:
                 FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
-                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver)
+                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver)
             
-            F_k_copy = F_k.copy()
+            temp_F_k_copy = temp_F_k.copy()
             
             # scale snapshot
             temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
@@ -328,7 +328,7 @@ class AdaptROM():
             if debugROM:
                 # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
                 # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
                 self.rhs_FOM_diff.append(rhs_FOM_diff)
 
             # update window
