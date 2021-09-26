@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -326,8 +326,12 @@ class RomDomain:
                 self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
                 self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM_dt_" + str(solver.dt) + ".npy")
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
-                self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
                 
+                if use_FOM == None:
+                    self.adaptiveROMuseFOM = catch_input(rom_dict, "adaptiveROMuseFOM", 0)
+                else:
+                    self.adaptiveROMuseFOM = use_FOM
+                    
                 if ADEIM_update == None:
                     self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
                 else:
