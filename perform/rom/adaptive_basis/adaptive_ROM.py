@@ -26,7 +26,9 @@ class AdaptROM():
         self.rel_proj_err_origspace = np.array([])
         self.rel_proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
         self.rel_proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
-        self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        #self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        
+        self.rhs_FOM_diff = []
         
         self.rel_proj_err_origspace_prim = np.array([])
         self.rel_proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 0))
@@ -59,8 +61,8 @@ class AdaptROM():
         fname_singval = os.path.join(model_dir, fname_param_singval)
         np.savez(fname_singval, sing_val = self.sing_val, sing_val_states = self.sing_val_states, init_singval = rom_domain.init_singval, init_singval_states = rom_domain.init_singval_states)
         
-        # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff")
-        # np.save(fname_rhsFOMdiff, self.rhs_FOM_diff)
+        fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff" +  rom_domain.param_string + "_dt_" + str(dt))
+        np.save(fname_rhsFOMdiff, np.asarray(self.rhs_FOM_diff))
         
         # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
         # np.save(fname_FOMsolnorm, self.denom_norm)
@@ -234,11 +236,16 @@ class AdaptROM():
         if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
             
             # compute F[:,k]
-            if use_FOM:
+            if use_FOM == 1:
                 F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter].copy()
-            else:
+            elif use_FOM == 0:
                 F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
-
+            elif use_FOM == 2:
+                FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
+                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver)
+            
+            F_k_copy = F_k.copy()
+            
             # scale snapshot
             F_k = F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
             F_k = model.scale_profile(F_k, normalize=True,
@@ -251,9 +258,11 @@ class AdaptROM():
             F_k = F_k.reshape((-1,1))
 
             if debugROM:
-                rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-
+                # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                self.rhs_FOM_diff.append(rhs_FOM_diff)
+                
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
                 self.cycle_window(F_k)
@@ -284,10 +293,15 @@ class AdaptROM():
             # F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
             
             # inefficient. first evaluate right hand side at all components and only select those components needed
-            if use_FOM:
+            if use_FOM == 1:
                 temp_F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
-            else:
+            elif use_FOM == 0:
                 temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+            elif use_FOM == 2:
+                FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
+                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver)
+            
+            F_k_copy = F_k.copy()
             
             # scale snapshot
             temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
@@ -312,8 +326,10 @@ class AdaptROM():
             F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
 
             if debugROM:
-                rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                self.rhs_FOM_diff.append(rhs_FOM_diff)
 
             # update window
             if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
