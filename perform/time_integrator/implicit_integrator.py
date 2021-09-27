@@ -135,7 +135,7 @@ class BDF(ImplicitIntegrator):
         
         copy_sol_domain.calc_rhs(solver)
         
-        rhs = sol_domain.sol_int.rhs # shape will be num_eqs x num_cells
+        rhs = copy_sol_domain.sol_int.rhs # shape will be num_eqs x num_cells
         
         # reshape rhs to be a column vector
         
