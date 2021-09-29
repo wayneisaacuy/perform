@@ -10,7 +10,7 @@ nrsteps=4000
 #latentDims=2
 updateFreq=1000
 useADEIM=0
-use_FOM=2
+use_FOM=0
 
 for latentDims in 3 5 7 10 15 20 #2 3 4 5
 do
