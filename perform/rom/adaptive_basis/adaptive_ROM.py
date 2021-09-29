@@ -296,10 +296,10 @@ class AdaptROM():
             if use_FOM == 1:
                 temp_F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
             elif use_FOM == 0:
-                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver)
+                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, rom_domain)
             elif use_FOM == 2:
                 FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
-                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver)
+                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver, rom_domain)
             
             temp_F_k_copy = temp_F_k.copy()
             
