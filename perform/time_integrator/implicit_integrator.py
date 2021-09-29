@@ -110,7 +110,7 @@ class BDF(ImplicitIntegrator):
 
         return residual
 
-    def calc_fullydiscrhs(self, sol_domain, stateArg, solver, samp_idxs=np.s_[:]):
+    def calc_fullydiscrhs(self, sol_domain, stateArg, solver, rom_domain, samp_idxs=np.s_[:]):
         """Compute fully discrete rhs
         
             stateArg is a column vector. also returns a column vector
@@ -130,6 +130,10 @@ class BDF(ImplicitIntegrator):
         
         copy_sol_domain.sol_int.sol_cons = stateArg_reshape
         copy_sol_domain.sol_int.update_state(from_cons=True)
+        
+        # update deim indices
+        copy_sol_domain.direct_samp_idxs = np.arange(0, sol_domain.mesh.num_cells)
+        rom_domain.compute_cellidx_hyper_reduc(copy_sol_domain)
         
         # compute rhs 
         
