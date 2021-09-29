@@ -133,6 +133,7 @@ class BDF(ImplicitIntegrator):
         
         # update deim indices
         copy_sol_domain.direct_samp_idxs = np.arange(0, sol_domain.mesh.num_cells)
+        copy_sol_domain.num_samp_cells = len(copy_sol_domain.direct_samp_idxs)
         rom_domain.compute_cellidx_hyper_reduc(copy_sol_domain)
         
         # compute rhs 

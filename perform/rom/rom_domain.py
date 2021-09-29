@@ -470,7 +470,7 @@ class RomDomain:
                         self.direct_samp_idxs = updated_interp_pts
                         sol_domain.direct_samp_idxs = updated_interp_pts
                         model.flatten_deim_idxs(self, sol_domain)
-                    
+
                         # update basis. make sure to update the deim basis too
                     
                         model.update_basis(updated_basis, self)
