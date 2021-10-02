@@ -116,6 +116,8 @@ def main():
         sol_domain.write_final_outputs(solver)
     else:
         sol_domain.write_final_outputs(solver, rom_domain.param_string)
+        if solver.solve_failed:
+            rom_domain.save_debug_quantities(solver)
 
     # ----- End post-processing -----
 

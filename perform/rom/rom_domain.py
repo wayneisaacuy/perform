@@ -381,6 +381,14 @@ class RomDomain:
         # Overwrite history with initialized solution
         sol_domain.sol_int.sol_hist_cons = [sol_domain.sol_int.sol_cons.copy()] * (self.time_integrator.time_order + 1)
         sol_domain.sol_int.sol_hist_prim = [sol_domain.sol_int.sol_prim.copy()] * (self.time_integrator.time_order + 1)
+    
+    def save_debug_quantities(self, solver):
+        
+        if self.adaptiveROM:
+            for model_idx, model in enumerate(self.model_list):
+                model.adapt.save_debugstats(self, solver.dt)
+        else:
+            pass
 
     def advance_iter(self, sol_domain, solver):
         """Advance low-dimensional state and full solution forward one physical time iteration.
