@@ -461,9 +461,9 @@ class RomDomain:
                     if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime :
                         
                         if self.adaptiveROMADEIMadapt:
-                            updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells)
+                            updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells, solver)
                         else:    
-                            updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells, trial_basis)
+                            updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells, trial_basis, solver)
 
                         # update deim interpolation points
                         # update rom_domain and sol_domain attributes. call method below to update rest

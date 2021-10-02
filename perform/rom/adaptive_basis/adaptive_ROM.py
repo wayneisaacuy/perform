@@ -70,71 +70,72 @@ class AdaptROM():
     def compute_relprojerr(self, decoded_ROM, solver, sol_domain, model, prim_sol):
         # compute relative projection error
         
-        decoded_ROM_origspace = decoded_ROM.copy()
-        decoded_ROM_origspace = decoded_ROM_origspace.reshape((-1,))
+        if solver.time_iter % solver.out_interval == 0:
+            decoded_ROM_origspace = decoded_ROM.copy()
+            decoded_ROM_origspace = decoded_ROM_origspace.reshape((-1,))
+            
+            curr_prim_sol = prim_sol.copy()
+            curr_prim_sol = curr_prim_sol.reshape((-1,))
+            
+            # need to scale decoded ROM
+            # decoded_ROM = model.scale_profile(decoded_ROM,
+            #                     normalize=True,
+            #                     norm_fac_prof=model.norm_fac_prof_cons,
+            #                     norm_sub_prof=model.norm_sub_prof_cons,
+            #                     center=True,
+            #                     cent_prof=model.cent_prof_cons,
+            #                     inverse=False,
+            #                     )
+            
+            # decoded_ROM = decoded_ROM.reshape((-1,1))
+            # decoded_ROM = decoded_ROM[:,0]
+            
+            FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
+            FOM_sol_origspace = self.FOM_snapshots[:,solver.time_iter]
+            FOM_sol_prim = self.FOM_snapshots_prim[:,solver.time_iter]
+            
+            # FOM_sol = FOM_sol.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+            
+            # # need to scale FOM
+            # FOM_sol = model.scale_profile(FOM_sol, normalize=True,
+            #                               norm_fac_prof=model.norm_fac_prof_cons,
+            #                               norm_sub_prof=model.norm_sub_prof_cons,
+            #                               center=True,
+            #                               cent_prof=model.cent_prof_cons,
+            #                               inverse=False,
+            #                               )
+            # FOM_sol = FOM_sol.reshape((-1,1))
+            # FOM_sol = FOM_sol[:,0]
+            
+            # try something else
+    
+            reprojROM =  model.trial_basis @ model.code
+            proj_err = LA.norm(FOM_sol - reprojROM)/LA.norm(FOM_sol)
+            proj_err_origspace = LA.norm(FOM_sol_origspace - decoded_ROM_origspace)/LA.norm(FOM_sol_origspace)
+            proj_err_prim = LA.norm(FOM_sol_prim - curr_prim_sol)/LA.norm(FOM_sol_prim)
+    
+            #proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
+            self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
+            self.rel_proj_err_origspace = np.concatenate((self.rel_proj_err_origspace, np.array([proj_err_origspace])))
+            self.rel_proj_err_origspace_prim = np.concatenate((self.rel_proj_err_origspace_prim, np.array([proj_err_prim])))
+            #self.denom_norm = np.concatenate((self.denom_norm, np.array([LA.norm(FOM_sol)])))
+            
+            proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
+            proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
+            proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 1))
+            
+            nMesh = sol_domain.mesh.num_cells
+            for idx in range(sol_domain.gas_model.num_eqs):
+                proj_err_states[idx,:] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
+                proj_err_origspace_states[idx,:] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
+                proj_err_states_prim[idx,:] = LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh] - curr_prim_sol[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh])
+            
+            self.rel_proj_err_states = np.concatenate((self.rel_proj_err_states, proj_err_states), axis = 1)
+            self.rel_proj_err_origspace_states = np.concatenate((self.rel_proj_err_origspace_states, proj_err_origspace_states), axis = 1)
+            self.rel_proj_err_states_prim = np.concatenate((self.rel_proj_err_states_prim, proj_err_states_prim), axis = 1)
         
-        curr_prim_sol = prim_sol.copy()
-        curr_prim_sol = curr_prim_sol.reshape((-1,))
-        
-        # need to scale decoded ROM
-        # decoded_ROM = model.scale_profile(decoded_ROM,
-        #                     normalize=True,
-        #                     norm_fac_prof=model.norm_fac_prof_cons,
-        #                     norm_sub_prof=model.norm_sub_prof_cons,
-        #                     center=True,
-        #                     cent_prof=model.cent_prof_cons,
-        #                     inverse=False,
-        #                     )
-        
-        # decoded_ROM = decoded_ROM.reshape((-1,1))
-        # decoded_ROM = decoded_ROM[:,0]
-        
-        FOM_sol = self.FOM_snapshots_scaled[:,solver.time_iter]
-        FOM_sol_origspace = self.FOM_snapshots[:,solver.time_iter]
-        FOM_sol_prim = self.FOM_snapshots_prim[:,solver.time_iter]
-        
-        # FOM_sol = FOM_sol.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
-        
-        # # need to scale FOM
-        # FOM_sol = model.scale_profile(FOM_sol, normalize=True,
-        #                               norm_fac_prof=model.norm_fac_prof_cons,
-        #                               norm_sub_prof=model.norm_sub_prof_cons,
-        #                               center=True,
-        #                               cent_prof=model.cent_prof_cons,
-        #                               inverse=False,
-        #                               )
-        # FOM_sol = FOM_sol.reshape((-1,1))
-        # FOM_sol = FOM_sol[:,0]
-        
-        # try something else
-
-        reprojROM =  model.trial_basis @ model.code
-        proj_err = LA.norm(FOM_sol - reprojROM)/LA.norm(FOM_sol)
-        proj_err_origspace = LA.norm(FOM_sol_origspace - decoded_ROM_origspace)/LA.norm(FOM_sol_origspace)
-        proj_err_prim = LA.norm(FOM_sol_prim - curr_prim_sol)/LA.norm(FOM_sol_prim)
-
-        #proj_err = LA.norm(FOM_sol - decoded_ROM)/LA.norm(FOM_sol)
-        self.rel_proj_err = np.concatenate((self.rel_proj_err, np.array([proj_err])))
-        self.rel_proj_err_origspace = np.concatenate((self.rel_proj_err_origspace, np.array([proj_err_origspace])))
-        self.rel_proj_err_origspace_prim = np.concatenate((self.rel_proj_err_origspace_prim, np.array([proj_err_prim])))
-        #self.denom_norm = np.concatenate((self.denom_norm, np.array([LA.norm(FOM_sol)])))
-        
-        proj_err_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
-        proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 1))
-        proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 1))
-        
-        nMesh = sol_domain.mesh.num_cells
-        for idx in range(sol_domain.gas_model.num_eqs):
-            proj_err_states[idx,:] = LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh] - reprojROM[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol[idx*nMesh:(idx+1)*nMesh])
-            proj_err_origspace_states[idx,:] = LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh] - decoded_ROM_origspace[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_origspace[idx*nMesh:(idx+1)*nMesh])
-            proj_err_states_prim[idx,:] = LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh] - curr_prim_sol[idx*nMesh:(idx+1)*nMesh])/LA.norm(FOM_sol_prim[idx*nMesh:(idx+1)*nMesh])
-        
-        self.rel_proj_err_states = np.concatenate((self.rel_proj_err_states, proj_err_states), axis = 1)
-        self.rel_proj_err_origspace_states = np.concatenate((self.rel_proj_err_origspace_states, proj_err_origspace_states), axis = 1)
-        self.rel_proj_err_states_prim = np.concatenate((self.rel_proj_err_states_prim, proj_err_states_prim), axis = 1)
-        
-        # if solver.time_iter == 2000:
-        #     breakpoint()
+        else:
+            pass
                 
     def load_FOM(self, rom_domain, model):
         # this has to be done for every model in model list
@@ -257,7 +258,7 @@ class AdaptROM():
                                       )
             F_k = F_k.reshape((-1,1))
 
-            if debugROM:
+            if debugROM and solver.time_iter % solver.out_interval == 0:
                 # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
                 # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
                 rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
@@ -325,7 +326,7 @@ class AdaptROM():
             
             F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
 
-            if debugROM:
+            if debugROM and solver.time_iter % solver.out_interval == 0:
                 # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
                 # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
                 rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
@@ -337,7 +338,7 @@ class AdaptROM():
             else:
                 self.window = np.concatenate((self.window, F_k), axis=1)
 
-    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh):
+    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver):
         
         old_basis = trial_basis.copy()
         r = rom_domain.adaptiveROMUpdateRank
@@ -383,12 +384,13 @@ class AdaptROM():
         
         sampling_id = np.sort(sampling_id)
         
-        basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
-        self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
+        if solver.time_iter % solver.out_interval == 0:
+            basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
+            self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
 
         return trial_basis, sampling_id
     
-    def PODbasis(self, deim_dim, nMesh, old_basis):
+    def PODbasis(self, deim_dim, nMesh, old_basis, solver):
         
         # compute basis using POD from snapshots
         U, Sv, _ = np.linalg.svd(self.window)
@@ -430,7 +432,8 @@ class AdaptROM():
         
         sampling_id = np.sort(sampling_id)
         
-        basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
-        self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
+        if solver.time_iter % solver.out_interval == 0:
+            basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
+            self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
 
         return trial_basis, sampling_id
