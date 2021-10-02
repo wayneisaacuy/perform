@@ -458,7 +458,7 @@ class RomDomain:
                     model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMuseFOM, self.adaptiveROMDebug)
                     
                     # call adeim
-                    if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime :
+                    if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % 2 == 0:
                         
                         if self.adaptiveROMADEIMadapt:
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells, solver)
