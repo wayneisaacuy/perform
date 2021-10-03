@@ -4,6 +4,5 @@ export PATH="$HOME/uni/apro/mlib:$PATH"
 
 dt=1.0e-09
 nrsteps=40000
-out_skip=10
 
-pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 0 --dt $dt --nrsteps $nrsteps --out_skip $out_skip"
+pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 0 --dt $dt --nrsteps $nrsteps"
