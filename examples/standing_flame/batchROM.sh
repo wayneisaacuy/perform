@@ -6,7 +6,7 @@ dt=1e-09
 nrsteps=40000
 updateFreq=1000
 useADEIM=0
-use_FOM=1
+use_FOM=0
 outskip=10   
 
 for latentDims in 5 6 7 8 9 10
