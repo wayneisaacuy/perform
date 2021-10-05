@@ -7,8 +7,8 @@ init_file = "./inputs/transient_flame_init.npy"
 dt          = 5.0e-8
 num_steps   = 14000
 time_scheme = "bdf"
-time_order  = 2
-dual_time   = True
+time_order  = 1
+dual_time   = False
 res_tol     = 1e-10
 
 # space discretization
@@ -43,19 +43,19 @@ num_restarts      = 20
 init_from_restart = False 
 
 # field output
-out_interval = 10
+out_interval = 1
 prim_out     = True
 cons_out     = True
 source_out   = False
-rhs_outut    = False
+rhs_out    = False
 
 # probe output
-probe_locs = [0.0025, 0.0075]
-probe_vars = ["pressure", "velocity"]
+#probe_locs = [0.0025, 0.0075]
+#probe_vars = ["pressure", "velocity"]
 
 # visualization
 vis_show     = True
-vis_save     = True
+vis_save     = False
 vis_interval = 100
 
 vis_type_1     = "field"
