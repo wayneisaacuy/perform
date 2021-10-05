@@ -5,7 +5,7 @@ export PATH="$HOME/uni/apro/mlib:$PATH"
 dt=1e-09
 nrsteps=40000
 updateFreq=1000
-useADEIM=0
+useADEIM=1
 use_FOM=0
 outskip=10   
 
