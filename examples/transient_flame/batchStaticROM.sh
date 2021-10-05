@@ -10,7 +10,7 @@ out_skip=10
 for latentDims in 3 5 7 10 15 20 25 50
 do
 
-pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --adaptive 0 --init_window_size $nrsteps --initbasis_snap_skip $snapskip --out_skip $out_skip"
+pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/transient_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --adaptive 0 --init_window_size $nrsteps --initbasis_snap_skip $snapskip --out_skip $out_skip"
 
 done
 
