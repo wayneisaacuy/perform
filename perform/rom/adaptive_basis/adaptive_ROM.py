@@ -38,6 +38,8 @@ class AdaptROM():
         self.sing_val = []
         self.sing_val_states = []
         
+        self.sing_val_residual = []
+        
         #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain, dt):
@@ -45,6 +47,7 @@ class AdaptROM():
         # convert singular values list to array
         self.sing_val = np.asarray(self.sing_val)
         self.sing_val_states = np.asarray(self.sing_val_states)
+        self.sing_val_residual = np.asarray(self.sing_val_residual)
         
         model_dir = rom_domain.model_dir
         
@@ -63,6 +66,9 @@ class AdaptROM():
         
         fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff" +  rom_domain.param_string + "_dt_" + str(dt))
         np.save(fname_rhsFOMdiff, np.asarray(self.rhs_FOM_diff))
+        
+        fname_singval_residual = os.path.join(model_dir, "unsteady_field_results/singvalresidual" +  rom_domain.param_string + "_dt_" + str(dt))
+        np.save(fname_singval_residual, self.sing_val_residual)
         
         # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
         # np.save(fname_FOMsolnorm, self.denom_norm)
@@ -350,6 +356,9 @@ class AdaptROM():
         
         _, Sv, Srh = np.linalg.svd(R)
         Sr = Srh.T
+        
+        if solver.time_iter % solver.out_interval == 0:
+            self.sing_val_residual.append(Sv)
         
         CT_pinv = np.linalg.pinv(C.T)
         

@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -339,6 +339,11 @@ class RomDomain:
                     
                 self.adaptiveROMFOMprimfile = catch_input(rom_dict, "adaptiveROMFOMprimfile", "unsteady_field_results/sol_prim_FOM_dt_" + str(solver.dt) + ".npy")
                 
+                if adapt_every == None:
+                    self.adaptiveROMadaptevery = catch_input(rom_dict, "adaptiveROMadaptevery", 1)
+                else:
+                    self.adaptiveROMadaptevery = adapt_every
+                        
                 #self.basis_adapted = 0
                 
                 assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
@@ -356,6 +361,9 @@ class RomDomain:
                 
                 if solver.out_interval > 1:
                     self.param_string = self.param_string + "_skip_" + str(solver.out_interval)
+                
+                if self.adaptiveROMadaptevery > 1:
+                    self.param_string = self.param_string + "_ae_" + str(self.adaptiveROMadaptevery)
      
         # Initialize
         self.model_list = [None] * self.num_models
@@ -466,7 +474,7 @@ class RomDomain:
                     model.adapt.update_residualSampling_window(self, solver, sol_domain, trial_basis, deim_idx_flat, decoded_ROM, model, self.adaptiveROMuseFOM, self.adaptiveROMDebug)
                     
                     # call adeim
-                    if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % 2 == 0:
+                    if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % self.adaptiveROMadaptevery == 0:
                         
                         if self.adaptiveROMADEIMadapt:
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells, solver)
@@ -487,7 +495,7 @@ class RomDomain:
                     if solver.time_iter == solver.num_steps:
                         model.adapt.save_debugstats(self, solver.dt)
                 
-                if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime :
+                if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % self.adaptiveROMadaptevery == 0:
                     self.compute_cellidx_hyper_reduc(sol_domain)
                     #self.basis_adapted = 1
                     

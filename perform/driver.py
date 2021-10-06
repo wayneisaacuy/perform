@@ -43,6 +43,7 @@ def main():
     parser.add_argument("--ADEIM_update", type=int, help="ADEIM for basis update", default=None)
     parser.add_argument("--initbasis_snap_skip", type=int, help="skip interval computing initial basis", default=None)
     parser.add_argument("--use_FOM", type=int, help="use FOM", default=None)
+    parser.add_argument("--adapt_every", type=int, help="adapt every", default=None)
     
     args = parser.parse_args()
     
@@ -56,7 +57,7 @@ def main():
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:
-        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq, args.ADEIM_update, args.initbasis_snap_skip, args.use_FOM)
+        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq, args.ADEIM_update, args.initbasis_snap_skip, args.use_FOM, args.adapt_every)
     else:
         rom_domain = None
 
