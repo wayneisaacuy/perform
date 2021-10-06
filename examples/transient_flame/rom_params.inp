@@ -1,0 +1,16 @@
+# model definition
+rom_method = "linear_galerkin_proj"
+
+num_models     = 1
+model_var_idxs = [[0,1,2,3]]
+initbasis_snapIterSkip = 1
+
+# hyperreduction
+hyper_reduc = True
+
+# adaptive basis
+adaptiveROM = True
+adaptiveROMADEIMadapt = 1
+adaptiveROMDebug = 1
+adaptiveROMuseFOM = 1
+
