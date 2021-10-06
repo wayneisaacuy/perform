@@ -16,6 +16,7 @@ do
 for adaptWindowSize in 5 7 11 12 13 14 15 25 50 75 100 250 500
 do
 for adaptevery in 2 3 4 5
+do
 
 pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --adapt_update_freq $updateFreq --ADEIM_update $useADEIM --use_FOM $use_FOM --out_skip $outskip --adapt_every $adaptevery"
 
