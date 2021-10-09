@@ -40,6 +40,12 @@ class AdaptROM():
         
         self.sing_val_residual = []
         
+        # debug
+        self.debug_iternum = []
+        self.debug_residual_mat = []
+        self.debug_rhs_approx = []
+        self.debug_singval = []
+        
         #self.denom_norm = np.array([])
         
     def save_debugstats(self, rom_domain, dt):
@@ -70,6 +76,11 @@ class AdaptROM():
         fname_singval_residual = os.path.join(model_dir, "unsteady_field_results/singvalresidual" +  rom_domain.param_string + "_dt_" + str(dt))
         np.save(fname_singval_residual, self.sing_val_residual)
         
+        # save debug files
+        fname_debug = "unsteady_field_results/debugADEIM" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
+        fname_debug = os.path.join(model_dir, fname_debug)
+        np.savez(fname_debug, iternum = np.asarray(self.debug_iternum), residual_mat = np.asarray(self.debug_residual_mat), rhs_approx = np.asarray(self.debug_rhs_approx), singval = np.asarray(self.debug_singval))
+
         # fname_FOMsolnorm = os.path.join(model_dir, "unsteady_field_results/FOMsolNorm")
         # np.save(fname_FOMsolnorm, self.denom_norm)
         
@@ -359,6 +370,12 @@ class AdaptROM():
         
         if solver.time_iter % solver.out_interval == 0:
             self.sing_val_residual.append(Sv)
+            
+            # save debug files
+            self.debug_iternum.append(solver.time_iter)
+            self.debug_residual_mat.append(R)
+            self.debug_rhs_approx.append(FS)
+            self.debug_singval.append(Sv)
         
         CT_pinv = np.linalg.pinv(C.T)
         
