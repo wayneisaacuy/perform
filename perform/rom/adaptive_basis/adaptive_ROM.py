@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import scipy.linalg as LA
+import copy
 
 class AdaptROM():
     def __init__(self, solver, rom_domain, sol_domain):
@@ -358,7 +359,7 @@ class AdaptROM():
     def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver):
         
         old_basis = trial_basis.copy()
-        r = rom_domain.adaptiveROMUpdateRank.copy()
+        r = copy.copy(rom_domain.adaptiveROMUpdateRank)
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
 
