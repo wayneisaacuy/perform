@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None, update_rank = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -303,9 +303,12 @@ class RomDomain:
                         break
                 
                 assert ROMDEIM_basis_same == 1, "ROM and DEIM basis have to be the same"                    
-
-                self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
                 
+                if update_rank == None:
+                    self.adaptiveROMUpdateRank = catch_input(rom_dict, "adaptiveROMUpdateRank", 1)
+                else:
+                    self.adaptiveROMUpdateRank = update_rank
+                    
                 if adapt_update_freq == None:
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
                 else:
@@ -364,6 +367,9 @@ class RomDomain:
                 
                 if self.adaptiveROMadaptevery > 1:
                     self.param_string = self.param_string + "_ae_" + str(self.adaptiveROMadaptevery)
+                
+                if self.adaptiveROMUpdateRank > 1:
+                    self.param_string = self.param_string + "_ur_" + str(self.adaptiveROMUpdateRank)
      
         # Initialize
         self.model_list = [None] * self.num_models
