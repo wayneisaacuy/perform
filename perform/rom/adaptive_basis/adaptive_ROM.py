@@ -381,10 +381,10 @@ class AdaptROM():
         
         CT_pinv = np.linalg.pinv(C.T)
         
-        if Sv.max() <= 10:
-            r = 1
-        else:
-            r = min(r, len(Sv))
+        # if Sv.max() <= 10:
+        #     r = 1
+        # else:
+        #     r = min(r, len(Sv))
 
         for i in range(r):
             alfa = -R @ Sr[:, i:i+1]
