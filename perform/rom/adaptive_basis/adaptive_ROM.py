@@ -36,6 +36,8 @@ class AdaptROM():
         
         self.basis_inc = np.array([])
         
+        self.rom_soln_change = []
+        
         self.sing_val = []
         self.sing_val_states = []
         
@@ -65,7 +67,7 @@ class AdaptROM():
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
                  relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
                  rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim,
-                 basis_inc = self.basis_inc)
+                 basis_inc = self.basis_inc, rom_soln_change = np.asarray(self.rom_soln_change))
         
         fname_param_singval = "unsteady_field_results/singval" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
         fname_singval = os.path.join(model_dir, fname_param_singval)
@@ -418,6 +420,8 @@ class AdaptROM():
         if solver.time_iter % solver.out_interval == 0:
             basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
             self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
+
+            rom_soln_change = np.kinalg.norm(self.code - trial_basis.T @ trial_basis @ self.code, 'fro')/np.linalg.norm(self.code, 'fro')
 
         return trial_basis, sampling_id
     
