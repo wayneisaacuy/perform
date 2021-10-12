@@ -358,7 +358,7 @@ class AdaptROM():
             else:
                 self.window = np.concatenate((self.window, F_k), axis=1)
 
-    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver):
+    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver, code):
         
         old_basis = trial_basis.copy()
         r = copy.copy(rom_domain.adaptiveROMUpdateRank)
@@ -421,7 +421,7 @@ class AdaptROM():
             basis_change = np.linalg.norm(old_basis - trial_basis @ trial_basis.T @ old_basis, 'fro')/np.linalg.norm(old_basis, 'fro')
             self.basis_inc = np.concatenate((self.basis_inc, np.array([basis_change])))
 
-            rom_soln_change = np.linalg.norm(self.code - trial_basis.T @ trial_basis @ self.code, 'fro')/np.linalg.norm(self.code, 'fro')
+            rom_soln_change = np.linalg.norm(code - trial_basis.T @ trial_basis @ code, 'fro')/np.linalg.norm(code, 'fro')
             self.rom_soln_change.append(rom_soln_change)
             
         return trial_basis, sampling_id
