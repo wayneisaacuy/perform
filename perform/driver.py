@@ -45,7 +45,7 @@ def main():
     parser.add_argument("--use_FOM", type=int, help="use FOM", default=None)
     parser.add_argument("--adapt_every", type=int, help="adapt every", default=None)
     parser.add_argument("--update_rank", type=int, help="update rank", default=None)
-    parser.add_argument("--learn_rate", type=int, help="learning rate", default=None)
+    parser.add_argument("--learn_rate", type=float, help="learning rate", default=None)
     
     args = parser.parse_args()
     
