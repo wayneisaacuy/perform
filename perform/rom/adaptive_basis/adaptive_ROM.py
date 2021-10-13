@@ -365,8 +365,8 @@ class AdaptROM():
         Fp = self.window[deim_idx_flat, :]
         FS = self.window[self.residual_samplepts, :]
 
-        #C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
-        C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
+        C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
+        #C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
         R = trial_basis[self.residual_samplepts, :] @ C - FS
         
         _, Sv, Srh = np.linalg.svd(R)

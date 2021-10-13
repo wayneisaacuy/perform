@@ -85,7 +85,7 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None, update_rank = None):
+    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None, update_rank = None, learning_rate = None):
 
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -108,6 +108,12 @@ class RomDomain:
         for i in range(len(self.latent_dims)):
             self.param_string = self.param_string + str(self.latent_dims[i]) + "_"
         self.param_string = self.param_string[:-1]
+        
+        # load learning rate
+        if learning_rate == None:
+            self.learning_rate = 1
+        else:
+            self.learning_rate = learning_rate
 
         # Load initial rom basis parameters
         
@@ -370,6 +376,9 @@ class RomDomain:
                 
                 if self.adaptiveROMUpdateRank > 1:
                     self.param_string = self.param_string + "_ur_" + str(self.adaptiveROMUpdateRank)
+                
+                self.param_string = self.param_string + "_lr_" + str(self.learning_rate)
+                    
      
         # Initialize
         self.model_list = [None] * self.num_models
@@ -535,7 +544,7 @@ class RomDomain:
             # Compute change in low-dimensional state
             for model_idx, model in enumerate(self.model_list):
                 d_code, code_lhs, code_rhs = model.calc_d_code(res_jacob, res, sol_domain)
-                model.code += d_code
+                model.code += self.learning_rate * d_code
                 model.code_hist[0] = model.code.copy()
                 model.update_sol(sol_domain)
 
