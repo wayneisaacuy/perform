@@ -362,10 +362,19 @@ class AdaptROM():
         
         old_basis = trial_basis.copy()
         r = copy.copy(rom_domain.adaptiveROMUpdateRank)
-        Fp = self.window[deim_idx_flat, :]
+        
         FS = self.window[self.residual_samplepts, :]
-
-        C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
+        
+        if rom_domain.adaptiveROMADEIMadapt == "ADEIM":
+            Fp = self.window[deim_idx_flat, :]
+            C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
+        elif rom_domain.adaptiveROMADEIMadapt == "AODEIM":
+            idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
+            idx_union = np.unique(idx_union)
+            idx_union = np.sort(idx_union)
+            Fp = self.window[idx_union, :]
+            C, _, _, _ = np.linalg.lstsq(trial_basis[idx_union, :], Fp, rcond=None)
+        
         #C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
         R = trial_basis[self.residual_samplepts, :] @ C - FS
         

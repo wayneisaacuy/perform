@@ -8,6 +8,7 @@ from perform.input_funcs import read_input_file, catch_list, catch_input
 from perform.solution.solution_phys import SolutionPhys
 from perform.time_integrator import get_time_integrator
 from perform.rom import get_rom_model, gen_ROMbasis, gen_DEIMsampling
+import copy
 
 class RomDomain:
     """Container class for all ROM models to be applied within a given SolutionDomain.
@@ -85,8 +86,25 @@ class RomDomain:
         adaptiveROM: Boolean flag indicating whether adaptive ROM is to be used for an intrusive rom_method.
     """
 
-    def __init__(self, sol_domain, solver, latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None, update_rank = None, learning_rate = None):
-
+    def __init__(self, sol_domain, solver, args):
+        
+        #latent_dims = None, adapt_basis = None, init_window_size = None, adapt_window_size = None, adapt_update_freq = None, ADEIM_update = None, initbasis_snap_skip = None, use_FOM = None, adapt_every = None, update_rank = None, learning_rate = None):
+        
+        # unpack arguments
+        latent_dims = args.latent_dims
+        adapt_basis = args.adaptive
+        init_window_size = args.init_window_size
+        adapt_window_size = args.adapt_window_size
+        #adapt_update_freq = args.adapt_update_freq
+        ADEIM_update = args.ADEIM_update
+        initbasis_snap_skip = args.initbasis_snap_skip
+        use_FOM = args.use_FOM
+        adapt_every = args.adapt_every
+        update_rank = args.update_rank
+        learning_rate = args.learn_rate
+        sampling_update_freq = args.sampling_update_freq
+        num_residual_comp = args.num_residual_comp
+        
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
         rom_dict = read_input_file(solver.rom_inputs)
@@ -315,10 +333,10 @@ class RomDomain:
                 else:
                     self.adaptiveROMUpdateRank = update_rank
                     
-                if adapt_update_freq == None:
+                if sampling_update_freq == None:
                     self.adaptiveROMUpdateFreq = catch_input(rom_dict, "adaptiveROMUpdateFreq", 1)
                 else:
-                    self.adaptiveROMUpdateFreq = adapt_update_freq
+                    self.adaptiveROMUpdateFreq = sampling_update_freq
                 #self.adaptiveROMWindowSize = catch_input(rom_dict, "adaptiveROMWindowSize", [tempWindowSize + 1 for tempWindowSize in self.hyper_reduc_dims])
                 
                 if adapt_window_size == None:
@@ -332,7 +350,15 @@ class RomDomain:
                     
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                 self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
-                self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
+                
+                if self.adaptiveROMInitTime < self.adaptiveROMWindowSize:
+                    self.adaptiveROMInitTime = copy.copy(self.adaptiveROMWindowSize)
+                
+                if num_residual_comp == None:
+                    self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
+                else:
+                    self.adaptiveROMnumResSample = num_residual_comp
+                
                 self.adaptiveROMFOMfile = catch_input(rom_dict, "adaptiveROMFOMfile", "unsteady_field_results/sol_cons_FOM_dt_" + str(solver.dt) + ".npy")
                 self.adaptiveROMDebug = catch_input(rom_dict, "adaptiveROMDebug", 0)
                 
@@ -342,7 +368,7 @@ class RomDomain:
                     self.adaptiveROMuseFOM = use_FOM
                     
                 if ADEIM_update == None:
-                    self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", 1)
+                    self.adaptiveROMADEIMadapt = catch_input(rom_dict, "adaptiveROMADEIMadapt", "ADEIM")
                 else:
                     self.adaptiveROMADEIMadapt = ADEIM_update
                     
@@ -363,10 +389,12 @@ class RomDomain:
                 self.param_string = self.param_string + "_res_" + str(self.adaptiveROMnumResSample)
                 self.param_string = self.param_string + "_useFOM_" + str(self.adaptiveROMuseFOM)
                 
-                if self.adaptiveROMADEIMadapt:
-                    self.param_string = self.param_string + "_ADEIM"
-                else:
-                    self.param_string = self.param_string + "_POD"
+                self.param_string = self.param_string + "_" + self.adaptiveROMADEIMadapt
+                
+                # if self.adaptiveROMADEIMadapt:
+                #     self.param_string = self.param_string + "_ADEIM"
+                # else:
+                #     self.param_string = self.param_string + "_POD"
                 
                 if solver.out_interval > 1:
                     self.param_string = self.param_string + "_skip_" + str(solver.out_interval)
@@ -491,7 +519,7 @@ class RomDomain:
                     # call adeim
                     if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % self.adaptiveROMadaptevery == 0:
                         
-                        if self.adaptiveROMADEIMadapt:
+                        if self.adaptiveROMADEIMadapt == "ADEIM" or self.adaptiveROMADEIMadapt == "AODEIM":
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells, solver, model.code)
                         else:    
                             updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells, trial_basis, solver)

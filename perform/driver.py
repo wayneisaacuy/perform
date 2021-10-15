@@ -38,17 +38,19 @@ def main():
     parser.add_argument("--adaptive", type=int, default=None, help="adaptive ROM")
     parser.add_argument("--init_window_size", type=int, help="initial window size", default=None)
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
-    parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
+    #parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
     parser.add_argument("--out_skip", type=int, help="skip interval in saving output", default=None)
-    parser.add_argument("--ADEIM_update", type=int, help="ADEIM for basis update", default=None)
+    parser.add_argument("--ADEIM_update", type=str, help="ADEIM for basis update", default=None)
     parser.add_argument("--initbasis_snap_skip", type=int, help="skip interval computing initial basis", default=None)
     parser.add_argument("--use_FOM", type=int, help="use FOM", default=None)
     parser.add_argument("--adapt_every", type=int, help="adapt every", default=None)
     parser.add_argument("--update_rank", type=int, help="update rank", default=None)
     parser.add_argument("--learn_rate", type=float, help="learning rate", default=None)
+    parser.add_argument("--sampling_update_freq", type=int, help="update frequency of sampling points", default=None)
+    parser.add_argument("--num_residual_comp", type=int, help="number of residual components", default=None)
     
     args = parser.parse_args()
-    
+
     working_dir = os.path.expanduser(parser.parse_args().working_dir)
     assert os.path.isdir(working_dir), "Given working directory does not exist"
 
@@ -59,7 +61,8 @@ def main():
     # Initialize physical and ROM solutions
     sol_domain = SolutionDomain(solver)
     if solver.calc_rom:
-        rom_domain = RomDomain(sol_domain, solver, args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq, args.ADEIM_update, args.initbasis_snap_skip, args.use_FOM, args.adapt_every, args.update_rank, args.learn_rate)
+        rom_domain = RomDomain(sol_domain, solver, args)
+        # args.latent_dims, args.adaptive, args.init_window_size, args.adapt_window_size, args.adapt_update_freq, args.ADEIM_update, args.initbasis_snap_skip, args.use_FOM, args.adapt_every, args.update_rank, args.learn_rate)
     else:
         rom_domain = None
 
