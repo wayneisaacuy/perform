@@ -426,6 +426,11 @@ class RomDomain:
 
             # Initialize code history
             model.code_hist = [model.code.copy()] * (self.time_integrator.time_order + 1)
+        
+        if self.adaptiveROM:
+                
+                # check that we are constructing a vector ROM
+                assert len(self.model_list) == 1, "AADEIM only works for vector ROM for now."
 
         sol_domain.sol_int.update_state(from_cons=self.target_cons)
 
@@ -481,15 +486,16 @@ class RomDomain:
                     if sol_domain.sol_int.res_norm_l2 < self.time_integrator.res_tol:
                         break
 
+        # if adaptive, make adjustments to the stored ROM solution if time iteration is at most initial window size
+        if self.adaptiveROM and solver.time_iter <= self.adaptiveROMInitTime :
+            self.correct_code_adaptive_initwindow(solver, sol_domain)
+        
         sol_domain.sol_int.update_sol_hist()
         self.update_code_hist()
 
         # update basis here
         if self.has_time_integrator:
             if self.adaptiveROM:
-                
-                # check that we are constructing a vector ROM
-                assert len(self.model_list) == 1, "AADEIM only works for vector ROM for now."
 
                 # initialize window here
                 if solver.time_iter == 1:
@@ -593,6 +599,28 @@ class RomDomain:
                 model.update_sol(sol_domain)
 
             sol_int.update_state(from_cons=True)
+
+    def correct_code_adaptive_initwindow(self, solver, sol_domain):
+        
+        # extract centered and normalized FOM
+        FOM_snap = self.adaptive_init_window[:, solver.time_iter]
+        
+        for model in self.model_list:
+            # project to ROM space
+            ROM_soln = np.dot(model.trial_basis.T, FOM_snap)
+            
+            # update model attributes
+            model.code = ROM_soln
+            model.code_hist[0] = model.code.copy()
+            model.update_sol(sol_domain)
+            
+        sol_int = sol_domain.sol_int
+            
+        # update sol_int attributes
+        
+        sol_int.update_state(from_cons=(not sol_domain.time_integrator.dual_time))
+        sol_int.sol_hist_cons[0] = sol_int.sol_cons.copy()
+        sol_int.sol_hist_prim[0] = sol_int.sol_prim.copy()
 
     def update_code_hist(self):
         """Update low-dimensional state history after physical time step."""
