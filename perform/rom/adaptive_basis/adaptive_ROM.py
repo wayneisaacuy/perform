@@ -18,6 +18,11 @@ class AdaptROM():
         
         #self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
         self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        
+        assert self.adaptive_init_window != None, "Cannot provide input files for ROM basis if using adaptive"
+        
+        self.window = rom_domain.adaptive_init_window[:, -rom_domain.adaptiveROMWindowSize:]
+        
         self.residual_samplepts = np.zeros(rom_domain.adaptiveROMnumResSample)
         self.residual_samplepts_comp = np.zeros(sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells - rom_domain.adaptiveROMnumResSample) # this is the complement
         self.FOM_snapshots = np.array([])
@@ -250,113 +255,116 @@ class AdaptROM():
             # extract flattened indices. only works for vector ROM!
             #deim_idx_flat = model.direct_samp_idxs_flat
             #trial_basis = model.trial_basis
+            
+        if solver.time_iter >= rom_domain.adaptiveROMInitTime + 1:
 
-        Q_k_temp = decoded_ROM
-        Q_k = Q_k_temp.reshape((-1,1))
-        #breakpoint()
-        if solver.time_iter == 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
-            
-            # compute F[:,k]
-            if use_FOM == 1:
-                F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter].copy()
-            elif use_FOM == 0:
-                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, rom_domain)
-            elif use_FOM == 2:
-                FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
-                F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver, rom_domain)
-            
-            F_k_copy = F_k.copy()
-            
-            # scale snapshot
-            F_k = F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
-            F_k = model.scale_profile(F_k, normalize=True,
-                                      norm_fac_prof=model.norm_fac_prof_cons,
-                                      norm_sub_prof=model.norm_sub_prof_cons,
-                                      center=True,
-                                      cent_prof=model.cent_prof_cons,
-                                      inverse=False,
-                                      )
-            F_k = F_k.reshape((-1,1))
-
-            if debugROM and solver.time_iter % solver.out_interval == 0:
-                # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
-                self.rhs_FOM_diff.append(rhs_FOM_diff)
+            Q_k_temp = decoded_ROM
+            Q_k = Q_k_temp.reshape((-1,1))
+            #breakpoint()
+            if solver.time_iter == rom_domain.adaptiveROMInitTime + 1 or solver.time_iter % rom_domain.adaptiveROMUpdateFreq  == 0:
                 
-            # update window
-            if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
-                self.cycle_window(F_k)
+                # compute F[:,k]
+                if solver.time_iter > rom_domain.adaptiveROMInitTime + 1:
+                    if use_FOM == 1:
+                        F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter].copy()
+                    elif use_FOM == 0:
+                        F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, rom_domain)
+                    elif use_FOM == 2:
+                        FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
+                        F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver, rom_domain)
+                    
+                    F_k_copy = F_k.copy()
+                    
+                    # scale snapshot
+                    F_k = F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+                    F_k = model.scale_profile(F_k, normalize=True,
+                                              norm_fac_prof=model.norm_fac_prof_cons,
+                                              norm_sub_prof=model.norm_sub_prof_cons,
+                                              center=True,
+                                              cent_prof=model.cent_prof_cons,
+                                              inverse=False,
+                                              )
+                    F_k = F_k.reshape((-1,1))
+        
+                    if debugROM and solver.time_iter % solver.out_interval == 0:
+                        # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                        # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                        rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                        self.rhs_FOM_diff.append(rhs_FOM_diff)
+                        
+                    # update window
+                    if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
+                        self.cycle_window(F_k)
+                    else:
+                        self.window = np.concatenate((self.window, F_k), axis=1)
+                
+                # compute R_k
+                R_k = self.window - (trial_basis @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ self.window[deim_idx_flat , :])    
+    
+                # find s_k and \breve{s}_k
+                sorted_idxs = np.argsort(-np.sum(R_k**2,axis=1))
+    
+                self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
+                self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
+    
             else:
-                self.window = np.concatenate((self.window, F_k), axis=1)
-            
-            # compute R_k
-            R_k = self.window - (trial_basis @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ self.window[deim_idx_flat , :])    
-
-            # find s_k and \breve{s}_k
-            sorted_idxs = np.argsort(-np.sum(R_k**2,axis=1))
-
-            self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
-            self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
-
-        else:
-
-            F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
-            
-            # take the union of s_k and p_k
-            idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
-            idx_union = np.unique(idx_union)
-            idx_union = np.sort(idx_union)
-            
-            # first evaluate the fully discrete RHS
-            # note that the computationally efficient approach would be to only evaluate the right hand side at select components
-            
-            # F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
-            
-            # inefficient. first evaluate right hand side at all components and only select those components needed
-            if use_FOM == 1:
-                temp_F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
-            elif use_FOM == 0:
-                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, rom_domain)
-            elif use_FOM == 2:
-                FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
-                temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver, rom_domain)
-            
-            temp_F_k_copy = temp_F_k.copy()
-            
-            # scale snapshot
-            temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
-            temp_F_k = model.scale_profile(temp_F_k, normalize=True,
-                                      norm_fac_prof=model.norm_fac_prof_cons,
-                                      norm_sub_prof=model.norm_sub_prof_cons,
-                                      center=True,
-                                      cent_prof=model.cent_prof_cons,
-                                      inverse=False,
-                                      )
-            temp_F_k = temp_F_k.reshape((-1,1))
-            F_k[idx_union, :] = temp_F_k[idx_union, :]
-            
-            # # extract components from Q_k
-            # sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
-            # sampled_StateArg[self.residual_samplepts,:] = Q_k[self.residual_samplepts,:]
-            
-            # now call the rhs function
-            # F_k[self.residual_samplepts, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, sampled_StateArg, solver, self.residual_samplepts)
-            # F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
-            
-            F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
-
-            if debugROM and solver.time_iter % solver.out_interval == 0:
-                # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-                rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
-                self.rhs_FOM_diff.append(rhs_FOM_diff)
-
-            # update window
-            if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
-                self.cycle_window(F_k)
-            else:
-                self.window = np.concatenate((self.window, F_k), axis=1)
+    
+                F_k = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
+                
+                # take the union of s_k and p_k
+                idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
+                idx_union = np.unique(idx_union)
+                idx_union = np.sort(idx_union)
+                
+                # first evaluate the fully discrete RHS
+                # note that the computationally efficient approach would be to only evaluate the right hand side at select components
+                
+                # F_k[idx_union, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, idx_union)
+                
+                # inefficient. first evaluate right hand side at all components and only select those components needed
+                if use_FOM == 1:
+                    temp_F_k = self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] 
+                elif use_FOM == 0:
+                    temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, Q_k, solver, rom_domain)
+                elif use_FOM == 2:
+                    FOM_qk = self.FOM_snapshots[:,solver.time_iter:solver.time_iter+1].copy()
+                    temp_F_k = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, FOM_qk, solver, rom_domain)
+                
+                temp_F_k_copy = temp_F_k.copy()
+                
+                # scale snapshot
+                temp_F_k = temp_F_k.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+                temp_F_k = model.scale_profile(temp_F_k, normalize=True,
+                                          norm_fac_prof=model.norm_fac_prof_cons,
+                                          norm_sub_prof=model.norm_sub_prof_cons,
+                                          center=True,
+                                          cent_prof=model.cent_prof_cons,
+                                          inverse=False,
+                                          )
+                temp_F_k = temp_F_k.reshape((-1,1))
+                F_k[idx_union, :] = temp_F_k[idx_union, :]
+                
+                # # extract components from Q_k
+                # sampled_StateArg = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 1))
+                # sampled_StateArg[self.residual_samplepts,:] = Q_k[self.residual_samplepts,:]
+                
+                # now call the rhs function
+                # F_k[self.residual_samplepts, :] = sol_domain.time_integrator.calc_fullydiscrhs(sol_domain, sampled_StateArg, solver, self.residual_samplepts)
+                # F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[deim_idx_flat, :]) @ F_k[deim_idx_flat, :]
+                
+                F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
+    
+                if debugROM and solver.time_iter % solver.out_interval == 0:
+                    # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                    # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                    rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                    self.rhs_FOM_diff.append(rhs_FOM_diff)
+    
+                # update window
+                if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
+                    self.cycle_window(F_k)
+                else:
+                    self.window = np.concatenate((self.window, F_k), axis=1)
 
     def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver, code):
         

@@ -84,7 +84,7 @@ def main():
             #     else:
             #         if rom_domain.adaptiveROM and solver.time_iter == rom_domain.adaptiveROMInitTime + 1:
             #             rom_domain.compute_cellidx_hyper_reduc(sol_domain)
-            
+
             # Advance one physical time step
             if solver.calc_rom:
                 rom_domain.advance_iter(sol_domain, solver)

@@ -80,6 +80,7 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
     snap_arr = np.load(in_file)
 
     snap_arr = snap_arr[:, :, iter_start : iter_end + 1 : iter_skip]
+    snap_arr_noskip = snap_arr[:, :, iter_start : iter_end + 1]
     _, num_cells, num_snaps = snap_arr.shape
 
     spatial_modes = []
@@ -96,11 +97,15 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
 
         # break data array into different variable groups
         group_arr = snap_arr[var_idx_list, :, :]
+        group_arr_noskip = snap_arr_noskip[var_idx_list, :, :]
         num_vars = group_arr.shape[0]
 
         # center and normalize data
         group_arr, cent_prof = center_data(group_arr, cent_type)
         group_arr, norm_sub_prof, norm_fac_prof = normalize_data(group_arr, norm_type)
+        
+        group_arr_noskip, _ = center_data(group_arr_noskip, cent_type)
+        group_arr_noskip, _, _ = normalize_data(group_arr_noskip, norm_type)
 
         min_dim = min(num_cells * num_vars, num_snaps)
         modes_out = min(min_dim, max_modes[group_idx])
@@ -109,6 +114,8 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
         group_arr = np.reshape(group_arr, (-1, group_arr.shape[-1]), order="C")
         U, singval, VT = svd(group_arr)
         U = np.reshape(U, (num_vars, num_cells, U.shape[-1]), order="C")
+        
+        group_arr_noskip = np.reshape(group_arr_noskip, (-1, group_arr_noskip.shape[-1]), order="C")
 
         # truncate modes
         basis = U[:, :, :modes_out]
@@ -130,7 +137,7 @@ def gen_ROMbasis(data_dir, dt, iter_start, iter_end, iter_skip, cent_type, norm_
         
     print("POD basis generated!")
     
-    return spatial_modes, cent_file, norm_sub_file, norm_fac_file, singval, singval_states
+    return spatial_modes, cent_file, norm_sub_file, norm_fac_file, singval, singval_states, group_arr_noskip
 
 def gen_DEIMsampling(var_idxs, basis, deim_dim):
     

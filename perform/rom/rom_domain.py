@@ -231,6 +231,8 @@ class RomDomain:
         self.init_singval = np.array([])
         self.init_singval_states = np.array([])
         
+        self.adaptive_init_window = None
+        
         # check if basis and deim files are provided 
         if "model_files" in rom_dict:
             # Load and check model input locations    
@@ -256,15 +258,11 @@ class RomDomain:
                 raise Exception('Automated computation of basis and DEIM sampling points not yet supported for nonlinear ROMs.')
             
             # compute basis and scaling profiles
-            spatial_modes, cent_file, norm_sub_file, norm_fac_file, self.init_singval, self.init_singval_states = gen_ROMbasis(self.model_dir,
-                                                                                  solver.dt, 
-                                                                                  self.initbasis_snapIterStart, 
-                                                                                  self.initbasis_snapIterEnd,
-                                                                                  self.initbasis_snapIterSkip, 
-                                                                                  self.initbasis_centType, 
-                                                                                  self.initbasis_normType, 
-                                                                                  self.model_var_idxs,
-                                                                                  self.latent_dims)
+            spatial_modes, cent_file, norm_sub_file, norm_fac_file, \
+                self.init_singval, self.init_singval_states, self.adaptive_init_window \
+                = gen_ROMbasis(self.model_dir, solver.dt, self.initbasis_snapIterStart, \
+                self.initbasis_snapIterEnd, self.initbasis_snapIterSkip, self.initbasis_centType, \
+                self.initbasis_normType, self.model_var_idxs, self.latent_dims)
             
             self.cent_cons_in = cent_file
             self.norm_sub_cons_in = norm_sub_file
@@ -351,8 +349,10 @@ class RomDomain:
                 #self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", [tempInitTime + 1 for tempInitTime in self.adaptiveROMWindowSize])
                 self.adaptiveROMInitTime = catch_input(rom_dict, "adaptiveROMInitTime", self.initbasis_snapIterEnd) #self.adaptiveROMWindowSize + 1)
                 
-                if self.adaptiveROMInitTime < self.adaptiveROMWindowSize:
-                    self.adaptiveROMInitTime = copy.copy(self.adaptiveROMWindowSize)
+                # if self.adaptiveROMInitTime < self.adaptiveROMWindowSize:
+                #     self.adaptiveROMInitTime = copy.copy(self.adaptiveROMWindowSize)
+                
+                assert self.adaptiveROMInitTime < self.adaptiveROMWindowSize, "initial window size has to be at least adaptive window size."
                 
                 if num_residual_comp == None:
                     self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
@@ -509,8 +509,8 @@ class RomDomain:
                     deim_dim = model.hyper_reduc_dim
 
                     # compute projection error
-                    if self.adaptiveROMDebug == 1:
-                        model.adapt.compute_relprojerr(decoded_ROM, solver, sol_domain, model, sol_domain.sol_int.sol_prim)
+                    # if self.adaptiveROMDebug == 1:
+                    model.adapt.compute_relprojerr(decoded_ROM, solver, sol_domain, model, sol_domain.sol_int.sol_prim)
                     
                     # update residual sampling points
                     
