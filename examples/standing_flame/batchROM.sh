@@ -11,15 +11,15 @@ outskip=10
 
 for latentDims in 4 5 6 7 8 9 10 11
 do
-for initWindowSize in 12 15 25 50 100 250 500
+for initWindowSize in 12 15 25 50 100
 do
-for adaptWindowSize in 5 7 11 12 13 14 15 25 50 75 100 250 500
+for adaptWindowSize in 5 7 11 12 13 14 15 25 50 75 100
 do
 for adaptevery in 2 3 4 5
 do
 for useADEIM in ADEIM AODEIM
 do
-for numrescomp in 2048 1024 512 256 128 64 32
+for numrescomp in 1024 512 256 128
 do
 for multiplier in 1 5 10 50
 do
