@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--adapt_window_size", type=int, help="adaptive window size", default=None)
     #parser.add_argument("--adapt_update_freq", type=int, help="adaptive update frequency", default=None)
     parser.add_argument("--out_skip", type=int, help="skip interval in saving output", default=None)
-    parser.add_argument("--ADEIM_update", type=str, help="ADEIM for basis update", default=None)
+    parser.add_argument("--ADEIM_update", type=str, help="ADEIM/POD/AODEIM for basis update", default=None)
     parser.add_argument("--initbasis_snap_skip", type=int, help="skip interval computing initial basis", default=None)
     parser.add_argument("--use_FOM", type=int, help="use FOM", default=None)
     parser.add_argument("--adapt_every", type=int, help="adapt every", default=None)

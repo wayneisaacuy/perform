@@ -17,9 +17,9 @@ class AdaptROM():
         # these initializations need to be changed for the scalar ROM case
         
         #self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, rom_domain.adaptiveROMWindowSize - 1))
-        self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
+        #self.window = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
         
-        assert self.adaptive_init_window != None, "Cannot provide input files for ROM basis if using adaptive"
+        assert rom_domain.adaptive_init_window is not None, "Cannot provide input files for ROM basis if using adaptive"
         
         self.window = rom_domain.adaptive_init_window[:, -rom_domain.adaptiveROMWindowSize:]
         

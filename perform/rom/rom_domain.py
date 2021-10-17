@@ -352,7 +352,7 @@ class RomDomain:
                 # if self.adaptiveROMInitTime < self.adaptiveROMWindowSize:
                 #     self.adaptiveROMInitTime = copy.copy(self.adaptiveROMWindowSize)
                 
-                assert self.adaptiveROMInitTime < self.adaptiveROMWindowSize, "initial window size has to be at least adaptive window size."
+                assert self.adaptiveROMInitTime >= self.adaptiveROMWindowSize, "initial window size has to be at least adaptive window size."
                 
                 if num_residual_comp == None:
                     self.adaptiveROMnumResSample = catch_input(rom_dict, "adaptiveROMnumResSample", sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells)
