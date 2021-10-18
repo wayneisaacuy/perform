@@ -4,27 +4,28 @@ export PATH="$HOME/uni/apro/mlib:$PATH"
 
 dt=1e-09
 nrsteps=40000
-#updateFreq=1000
-#useADEIM=ADEIM
+# updateFreq=1000
+# useADEIM=ADEIM
 use_FOM=0
 outskip=10   
 
-for latentDims in 4 5 6 7 8 9 10 11
+for latentDims in 7 8 # 4 5 6 7 8 9 10 11
 do
-for initWindowSize in 12 15 25 50 100
+for initWindowSize in 12 15 # 12 15 25 50 100
 do
-for adaptWindowSize in 5 7 11 12 13 14 15 25 50 75 100
+for adaptWindowSize in $(( latentDims+1 )) 11 12 13 14 15 # 7 25 50 75 100 latentDims + 1
 do
 for adaptevery in 2 3 4 5
 do
-for useADEIM in ADEIM AODEIM
+for useADEIM in AODEIM # ADEIM
 do
-for numrescomp in 1024 512 256 128
+for numrescomp in 2000 1750 1024 # 512 256 128
 do
-for multiplier in 1 5 10 50
+for multiplier in 1 # 5 10 50
 do
 
-pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --sampling_update_freq $(( multiplier*adaptevery )) --ADEIM_update $useADEIM --use_FOM $use_FOM --out_skip $outskip --adapt_every $adaptevery --num_residual_comp $numrescomp"
+pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --sampling_update_freq $(( multiplier*adaptevery )) --ADEIM_update $useADEIM --use_FOM $use_FOM --out_skip $outskip --adapt_every $adaptevery --num_residual_comp $numrescomp" 
+
 
 done
 done
