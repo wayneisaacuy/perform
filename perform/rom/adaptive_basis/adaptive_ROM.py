@@ -34,7 +34,7 @@ class AdaptROM():
         self.rel_proj_err_origspace_states = np.zeros((sol_domain.gas_model.num_eqs, 0))
         #self.rhs_FOM_diff = np.zeros((sol_domain.gas_model.num_eqs * sol_domain.mesh.num_cells, 0))
         
-        self.rhs_FOM_diff = []
+        # self.rhs_FOM_diff = []
         
         self.rel_proj_err_origspace_prim = np.array([])
         self.rel_proj_err_states_prim = np.zeros((sol_domain.gas_model.num_eqs, 0))
@@ -43,10 +43,12 @@ class AdaptROM():
         
         self.rom_soln_change = []
         
-        self.sing_val = []
-        self.sing_val_states = []
+        self.residual_idx = []
         
-        self.sing_val_residual = []
+        # self.sing_val = []
+        # self.sing_val_states = []
+        
+        # self.sing_val_residual = []
         
         # # debug
         # self.debug_iternum = []
@@ -59,9 +61,9 @@ class AdaptROM():
     def save_debugstats(self, rom_domain, dt):
         
         # convert singular values list to array
-        self.sing_val = np.asarray(self.sing_val)
-        self.sing_val_states = np.asarray(self.sing_val_states)
-        self.sing_val_residual = np.asarray(self.sing_val_residual)
+        # self.sing_val = np.asarray(self.sing_val)
+        # self.sing_val_states = np.asarray(self.sing_val_states)
+        # self.sing_val_residual = np.asarray(self.sing_val_residual)
         
         model_dir = rom_domain.model_dir
         
@@ -72,17 +74,17 @@ class AdaptROM():
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
                  relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
                  rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim,
-                 basis_inc = self.basis_inc, rom_soln_change = np.asarray(self.rom_soln_change))
+                 basis_inc = self.basis_inc, rom_soln_change = np.asarray(self.rom_soln_change), )
         
-        fname_param_singval = "unsteady_field_results/singval" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
-        fname_singval = os.path.join(model_dir, fname_param_singval)
-        np.savez(fname_singval, sing_val = self.sing_val, sing_val_states = self.sing_val_states, init_singval = rom_domain.init_singval, init_singval_states = rom_domain.init_singval_states)
+        # fname_param_singval = "unsteady_field_results/singval" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
+        # fname_singval = os.path.join(model_dir, fname_param_singval)
+        # np.savez(fname_singval, sing_val = self.sing_val, sing_val_states = self.sing_val_states, init_singval = rom_domain.init_singval, init_singval_states = rom_domain.init_singval_states)
         
-        fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff" +  rom_domain.param_string + "_dt_" + str(dt))
-        np.save(fname_rhsFOMdiff, np.asarray(self.rhs_FOM_diff))
+        # fname_rhsFOMdiff = os.path.join(model_dir, "unsteady_field_results/rhsFOMdiff" +  rom_domain.param_string + "_dt_" + str(dt))
+        # np.save(fname_rhsFOMdiff, np.asarray(self.rhs_FOM_diff))
         
-        fname_singval_residual = os.path.join(model_dir, "unsteady_field_results/singvalresidual" +  rom_domain.param_string + "_dt_" + str(dt))
-        np.save(fname_singval_residual, self.sing_val_residual)
+        # fname_singval_residual = os.path.join(model_dir, "unsteady_field_results/singvalresidual" +  rom_domain.param_string + "_dt_" + str(dt))
+        # np.save(fname_singval_residual, self.sing_val_residual)
         
         # # save debug files
         # fname_debug = "unsteady_field_results/debugADEIM" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
@@ -286,11 +288,11 @@ class AdaptROM():
                                               )
                     F_k = F_k.reshape((-1,1))
         
-                    if debugROM and solver.time_iter % solver.out_interval == 0:
-                        # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                        # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-                        rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
-                        self.rhs_FOM_diff.append(rhs_FOM_diff)
+                    # if debugROM and solver.time_iter % solver.out_interval == 0:
+                    #     # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                    #     # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                    #     rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                    #     self.rhs_FOM_diff.append(rhs_FOM_diff)
                         
                     # update window
                     if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
@@ -306,6 +308,8 @@ class AdaptROM():
     
                 self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
                 self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
+                
+                self.residual_idx.append(self.residual_samplepts)
     
             else:
     
@@ -354,11 +358,11 @@ class AdaptROM():
                 
                 F_k[self.residual_samplepts_comp, :] = trial_basis[self.residual_samplepts_comp, :] @ np.linalg.pinv(trial_basis[idx_union, :]) @ F_k[idx_union, :]
     
-                if debugROM and solver.time_iter % solver.out_interval == 0:
-                    # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
-                    # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
-                    rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
-                    self.rhs_FOM_diff.append(rhs_FOM_diff)
+                # if debugROM and solver.time_iter % solver.out_interval == 0:
+                #     # rhs_FOM_diff = self.FOM_snapshots_scaled[:,solver.time_iter-1:solver.time_iter] - F_k
+                #     # self.rhs_FOM_diff = np.concatenate((self.rhs_FOM_diff,rhs_FOM_diff), axis = 1)
+                #     rhs_FOM_diff = np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter] - temp_F_k_copy,'fro')/np.linalg.norm(self.FOM_snapshots[:,solver.time_iter-1:solver.time_iter],'fro')
+                #     self.rhs_FOM_diff.append(rhs_FOM_diff)
     
                 # update window
                 if self.window.shape[1] == rom_domain.adaptiveROMWindowSize:
@@ -389,8 +393,8 @@ class AdaptROM():
         _, Sv, Srh = np.linalg.svd(R)
         Sr = Srh.T
         
-        if solver.time_iter % solver.out_interval == 0:
-            self.sing_val_residual.append(Sv)
+        # if solver.time_iter % solver.out_interval == 0:
+            # self.sing_val_residual.append(Sv)
             
             # save debug files
             # if Sv.max() > 10:
@@ -451,16 +455,16 @@ class AdaptROM():
         trial_basis = U[:, :deim_dim]
         
         # compute singular values and store
-        self.sing_val.append(Sv)
-        n_dof = self.window.shape[0]//nMesh
-        sing_val_states = []
-        for idx in range(n_dof):
-            window_states = self.window[idx*nMesh:(idx + 1)*nMesh,:]
-            _, Sv_states, _ = np.linalg.svd(window_states)
-            sing_val_states.append(Sv_states)
+        # self.sing_val.append(Sv)
+        # n_dof = self.window.shape[0]//nMesh
+        # sing_val_states = []
+        # for idx in range(n_dof):
+        #     window_states = self.window[idx*nMesh:(idx + 1)*nMesh,:]
+        #     _, Sv_states, _ = np.linalg.svd(window_states)
+        #     sing_val_states.append(Sv_states)
         
-        sing_val_states = np.asarray(sing_val_states)
-        self.sing_val_states.append(sing_val_states)
+        # sing_val_states = np.asarray(sing_val_states)
+        # self.sing_val_states.append(sing_val_states)
         
         # orthogonalize basis, redundant
 
