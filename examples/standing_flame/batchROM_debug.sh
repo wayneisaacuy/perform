@@ -6,15 +6,16 @@ dt=1e-09
 nrsteps=40000
 useADEIM=AODEIM
 use_FOM=0
+outskip=10
  
-latentDims=8
-adaptevery=5
+latentDims=9
+adaptevery=2
 initWindowSize=12
-adaptWindowSize=9
+adaptWindowSize=12
 
-numrescomp=2048
+numrescomp=2000
 
-pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --sampling_update_freq $(( 200*adaptevery )) --ADEIM_update $useADEIM --use_FOM $use_FOM --adapt_every $adaptevery --num_residual_comp $numrescomp"
+pySLURM.py "../../perform/driver.py /scratch/work/peherstorfer/wtu1/perform/examples/standing_flame --calc_rom 1 --dt $dt --nrsteps $nrsteps --latent_dims $latentDims --init_window_size $initWindowSize --adapt_window_size $adaptWindowSize --sampling_update_freq $adaptevery --ADEIM_update $useADEIM --use_FOM $use_FOM --out_skip $outskip --adapt_every $adaptevery --num_residual_comp $numrescomp"
 
 #for learn_rate in 0.75 1.1 1.5 #2 5 10 25 50 100 #5e-01 1e-01
 #do
