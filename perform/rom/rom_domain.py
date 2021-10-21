@@ -525,7 +525,7 @@ class RomDomain:
                     # call adeim
                     if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % self.adaptiveROMadaptevery == 0:
                         
-                        if self.adaptiveROMADEIMadapt == "ADEIM" or self.adaptiveROMADEIMadapt == "AODEIM":
+                        if self.adaptiveROMADEIMadapt != "POD": #self.adaptiveROMADEIMadapt == "ADEIM" or self.adaptiveROMADEIMadapt == "AODEIM":
                             updated_basis, updated_interp_pts = model.adapt.adeim(self, trial_basis, deim_idx_flat, deim_dim, sol_domain.mesh.num_cells, solver, model.code)
                         else:    
                             updated_basis, updated_interp_pts = model.adapt.PODbasis(deim_dim, sol_domain.mesh.num_cells, trial_basis, solver)

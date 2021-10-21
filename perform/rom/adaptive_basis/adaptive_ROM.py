@@ -43,7 +43,7 @@ class AdaptROM():
         
         self.rom_soln_change = []
         
-        self.residual_idx = []
+        # self.residual_idx = []
         
         # self.sing_val = []
         # self.sing_val_states = []
@@ -74,7 +74,7 @@ class AdaptROM():
         np.savez(fname_relprojerr, relprojerr_scaled = self.rel_proj_err, relprojerr_origspace = self.rel_proj_err_origspace, 
                  relprojerr_scaled_states = self.rel_proj_err_states, relprojerr_origspace_states = self.rel_proj_err_origspace_states,
                  rel_proj_err_origspace_prim = self.rel_proj_err_origspace_prim, rel_proj_err_states_prim = self.rel_proj_err_states_prim,
-                 basis_inc = self.basis_inc, rom_soln_change = np.asarray(self.rom_soln_change), )
+                 basis_inc = self.basis_inc, rom_soln_change = np.asarray(self.rom_soln_change) ) #, residual_idx = np.asarray(self.residual_idx))
         
         # fname_param_singval = "unsteady_field_results/singval" + rom_domain.param_string + "_dt_" + str(dt) + ".npz"
         # fname_singval = os.path.join(model_dir, fname_param_singval)
@@ -309,7 +309,7 @@ class AdaptROM():
                 self.residual_samplepts = sorted_idxs[:rom_domain.adaptiveROMnumResSample]
                 self.residual_samplepts_comp = sorted_idxs[rom_domain.adaptiveROMnumResSample:]
                 
-                self.residual_idx.append(self.residual_samplepts)
+                # self.residual_idx.append(self.residual_samplepts)
     
             else:
     
@@ -380,16 +380,20 @@ class AdaptROM():
         if rom_domain.adaptiveROMADEIMadapt == "ADEIM":
             Fp = self.window[deim_idx_flat, :]
             C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
+            R = trial_basis[self.residual_samplepts, :] @ C - FS
         elif rom_domain.adaptiveROMADEIMadapt == "AODEIM":
             idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
             idx_union = np.unique(idx_union)
             idx_union = np.sort(idx_union)
             Fp = self.window[idx_union, :]
             C, _, _, _ = np.linalg.lstsq(trial_basis[idx_union, :], Fp, rcond=None)
-        
+            R = trial_basis[idx_union, :] @ C - self.window[idx_union, :]
+        elif rom_domain.adaptiveROMADEIMadapt == "AFDEIM":
+            C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
+            R = trial_basis @ C - self.window
+            
         #C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
-        R = trial_basis[self.residual_samplepts, :] @ C - FS
-        
+
         _, Sv, Srh = np.linalg.svd(R)
         Sr = Srh.T
         
