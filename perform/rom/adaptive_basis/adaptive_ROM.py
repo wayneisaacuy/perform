@@ -381,6 +381,9 @@ class AdaptROM():
             Fp = self.window[deim_idx_flat, :]
             C, _, _, _ = np.linalg.lstsq(trial_basis[deim_idx_flat, :], Fp, rcond=None) # not sure if it should be solve or lstsq
             R = trial_basis[self.residual_samplepts, :] @ C - FS
+            
+            idx_eval_basis = self.residual_samplepts
+            
         elif rom_domain.adaptiveROMADEIMadapt == "AODEIM":
             idx_union = np.concatenate((self.residual_samplepts, deim_idx_flat))
             idx_union = np.unique(idx_union)
@@ -388,9 +391,16 @@ class AdaptROM():
             Fp = self.window[idx_union, :]
             C, _, _, _ = np.linalg.lstsq(trial_basis[idx_union, :], Fp, rcond=None)
             R = trial_basis[idx_union, :] @ C - self.window[idx_union, :]
+            
+            idx_eval_basis = idx_union
+            
         elif rom_domain.adaptiveROMADEIMadapt == "AFDEIM":
             C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
             R = trial_basis @ C - self.window
+            
+            idx_eval_basis = np.concatenate((self.residual_samplepts, self.residual_samplepts_comp))
+            idx_eval_basis = np.unique(idx_eval_basis)
+            idx_eval_basis = np.sort(idx_eval_basis)
             
         #C, _, _, _ = np.linalg.lstsq(trial_basis, self.window, rcond=None)
 
@@ -417,7 +427,8 @@ class AdaptROM():
         for i in range(r):
             alfa = -R @ Sr[:, i:i+1]
             beta = CT_pinv @ Sr[:, i:i+1]
-            trial_basis[self.residual_samplepts, :] = trial_basis[self.residual_samplepts, :] + alfa @ beta.T
+            # trial_basis[self.residual_samplepts, :] = trial_basis[self.residual_samplepts, :] + alfa @ beta.T
+            trial_basis[idx_eval_basis, :] = trial_basis[idx_eval_basis, :] + alfa @ beta.T
             
         # orthogonalize basis
 
