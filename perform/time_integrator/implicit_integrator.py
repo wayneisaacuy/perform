@@ -158,3 +158,43 @@ class BDF(ImplicitIntegrator):
         fullydiscrhs = coeffs[0] * stateArg[samp_idxs, :] - self.dt * rhs[samp_idxs, :]
         
         return fullydiscrhs
+    
+    def calc_fullydisc_residual(self, sol_hist, sol_domain, stateArg, solver, rom_domain, samp_idxs=np.s_[:]):
+        
+        assert self.time_order < 2, "BDF order has to be 1, backward Euler only"
+        
+        # make a deep copy of sol_domain
+        
+        copy_sol_domain = copy.deepcopy(sol_domain)
+        
+        # reshape stateArg
+        
+        stateArg_reshape = stateArg.reshape((sol_domain.gas_model.num_eqs, sol_domain.mesh.num_cells), order="C")
+        
+        # update sol_cons and sol_prim
+        
+        copy_sol_domain.sol_int.sol_cons = stateArg_reshape
+        copy_sol_domain.sol_int.update_state(from_cons=True)
+        
+        # update deim indices
+        copy_sol_domain.direct_samp_idxs = np.arange(0, sol_domain.mesh.num_cells)
+        copy_sol_domain.num_samp_cells = len(copy_sol_domain.direct_samp_idxs)
+        rom_domain.compute_cellidx_hyper_reduc(copy_sol_domain)
+        
+        # compute rhs 
+        
+        copy_sol_domain.calc_rhs(solver)
+        
+        rhs = copy_sol_domain.sol_int.rhs # shape will be num_eqs x num_cells
+        
+        time_order = min(solver.iter, self.time_order)
+
+        coeffs = self.coeffs[time_order - 1]
+        
+        residual = coeffs[0] * stateArg_reshape[:, samp_idxs] + coeffs[1] * sol_hist[1][:, samp_idxs]
+        
+        residual = -(residual / self.dt) + rhs[:, samp_idxs]
+        
+        # reshape residual
+        
+        return residual

@@ -104,6 +104,12 @@ class RomDomain:
         learning_rate = args.learn_rate
         sampling_update_freq = args.sampling_update_freq
         num_residual_comp = args.num_residual_comp
+        use_line_search = args.use_line_search
+        
+        if use_line_search == None:
+            self.use_line_search = 0
+        else:
+            self.use_line_search = 1
         
         self.param_string = "" # string containing parameters # AADEIM, init window size, window size, update rank, update freq, POD, useFOM, how many residual components
           
@@ -578,6 +584,11 @@ class RomDomain:
             # Compute change in low-dimensional state
             for model_idx, model in enumerate(self.model_list):
                 d_code, code_lhs, code_rhs = model.calc_d_code(res_jacob, res, sol_domain)
+                
+                if self.use_line_search:
+                    self.learning_rate = 1
+                    self.learning_rate = self.do_line_search(self.learning_rate, sol_domain, res_jacob, res, )
+                
                 model.code += self.learning_rate * d_code
                 model.code_hist[0] = model.code.copy()
                 model.update_sol(sol_domain)
@@ -599,7 +610,33 @@ class RomDomain:
                 model.update_sol(sol_domain)
 
             sol_int.update_state(from_cons=True)
+    
+    def do_line_search(self, learn_rate, sol_domain, res_jacob, res, model, d_code, solver):
+        
+        sigma = 1e-4
 
+        n_iter = 50
+        
+        sol_int = sol_domain.sol_int
+        
+        for iter_id in range(n_iter):
+            
+            # evaluate rhs of Armijo rule
+            rhs = model.compute_linesearch_rhs_norm(res, sigma, learn_rate, res_jacob, d_code, sol_domain)
+            
+            # evaluate lhs of Armijo rule
+            new_state = model.decode_sol(model.code + learn_rate * d_code)
+            new_res = self.time_integrator.calc_fullydisc_residual(sol_int.sol_hist_cons,\ 
+                        sol_domain, new_state, solver, self, samp_idxs=sol_domain.direct_samp_idxs)
+            lhs = model.compute_linesearch_lhs_norm(new_res, sol_domain)
+            
+            if lhs <= rhs:
+                break
+            
+            learn_rate = 0.5*learn_rate
+        
+        return learn_rate
+            
     def correct_code_adaptive_initwindow(self, solver, sol_domain):
         
         # extract centered and normalized FOM

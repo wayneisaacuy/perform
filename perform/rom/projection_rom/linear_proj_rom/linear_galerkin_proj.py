@@ -97,6 +97,36 @@ class LinearGalerkinProj(LinearProjROM):
         d_code = np.linalg.solve(lhs, rhs)
 
         return d_code, lhs, rhs
+    
+    def compute_linesearch_rhs_norm(self, init_res, sigma, curr_learn_rate, init_res_jacob, dcode, sol_domain):
+
+        lhs = (init_res_jacob @ self.trial_basis_scaled) / self.norm_fac_prof_cons.ravel(order="C")[
+            self.direct_samp_idxs_flat, None
+        ]
+        res_scaled = (init_res / self.norm_fac_prof_cons[:, sol_domain.direct_samp_idxs]).ravel(order="C")
+
+        # Project LHS and RHS onto low-dimensional space, solve linear system
+        if self.hyper_reduc:
+            lhs = self.hyper_reduc_operator @ lhs
+            rhs = self.hyper_reduc_operator @ res_scaled
+        else:
+            lhs = self.trial_basis.T @ lhs
+            rhs = self.trial_basis.T @ res_scaled   
+        
+        armijo_rule_rhs = rhs + sigma * curr_learn_rate * np.dot(lhs.T, dcode)
+        
+        return np.linalg.norm(armijo_rule_rhs)
+    
+    def compute_linesearch_lhs_norm(self, res, sol_domain):
+        
+        res_scaled = (res / self.norm_fac_prof_cons[:, sol_domain.direct_samp_idxs]).ravel(order="C")
+        
+        if self.hyper_reduc:
+            rhs = self.hyper_reduc_operator @ res_scaled
+        else:
+            rhs = self.trial_basis.T @ res_scaled  
+        
+        
 
     def update_basis(self, new_basis, rom_domain):
         

@@ -48,6 +48,7 @@ def main():
     parser.add_argument("--learn_rate", type=float, help="learning rate", default=None)
     parser.add_argument("--sampling_update_freq", type=int, help="update frequency of sampling points", default=None)
     parser.add_argument("--num_residual_comp", type=int, help="number of residual components", default=None)
+    parser.add_argument("--use_line_search", type=int, help="use line search for Newton iteration", default=None)
     
     args = parser.parse_args()
 
