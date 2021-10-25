@@ -587,7 +587,7 @@ class RomDomain:
                 
                 if self.use_line_search:
                     self.learning_rate = 1
-                    self.learning_rate = self.do_line_search(self.learning_rate, sol_domain, res_jacob, res, )
+                    self.learning_rate = self.do_line_search(self.learning_rate, sol_domain, res_jacob, res, model, d_code, solver)
                 
                 model.code += self.learning_rate * d_code
                 model.code_hist[0] = model.code.copy()
@@ -626,8 +626,9 @@ class RomDomain:
             
             # evaluate lhs of Armijo rule
             new_state = model.decode_sol(model.code + learn_rate * d_code)
-            new_res = self.time_integrator.calc_fullydisc_residual(sol_int.sol_hist_cons,\ 
-                        sol_domain, new_state, solver, self, samp_idxs=sol_domain.direct_samp_idxs)
+            new_state = new_state.reshape((-1,1))
+            new_res = self.time_integrator.calc_fullydisc_residual(sol_int.sol_hist_cons, sol_domain,\
+                            new_state, solver, self, samp_idxs=sol_domain.direct_samp_idxs)
             lhs = model.compute_linesearch_lhs_norm(new_res, sol_domain)
             
             if lhs <= rhs:

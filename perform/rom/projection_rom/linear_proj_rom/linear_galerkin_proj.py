@@ -95,7 +95,7 @@ class LinearGalerkinProj(LinearProjROM):
             rhs = self.trial_basis.T @ res_scaled
 
         d_code = np.linalg.solve(lhs, rhs)
-
+        
         return d_code, lhs, rhs
     
     def compute_linesearch_rhs_norm(self, init_res, sigma, curr_learn_rate, init_res_jacob, dcode, sol_domain):
@@ -113,7 +113,7 @@ class LinearGalerkinProj(LinearProjROM):
             lhs = self.trial_basis.T @ lhs
             rhs = self.trial_basis.T @ res_scaled   
         
-        armijo_rule_rhs = rhs + sigma * curr_learn_rate * np.dot(lhs.T, dcode)
+        armijo_rule_rhs = -rhs + sigma * curr_learn_rate * np.dot(lhs.T, dcode)
         
         return np.linalg.norm(armijo_rule_rhs)
     
@@ -126,7 +126,7 @@ class LinearGalerkinProj(LinearProjROM):
         else:
             rhs = self.trial_basis.T @ res_scaled  
         
-        
+        return np.linalg.norm(rhs)
 
     def update_basis(self, new_basis, rom_domain):
         
