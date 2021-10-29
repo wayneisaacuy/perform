@@ -370,9 +370,11 @@ class AdaptROM():
                 else:
                     self.window = np.concatenate((self.window, F_k), axis=1)
 
-    def adeim(self, rom_domain, trial_basis, deim_idx_flat, deim_dim, nMesh, solver, code):
+    def adeim(self, rom_domain, curr_trial_basis, deim_idx_flat, deim_dim, nMesh, solver, code):
         
-        old_basis = trial_basis.copy()
+        old_basis = curr_trial_basis.copy()
+        trial_basis = curr_trial_basis.copy()
+        
         r = copy.copy(rom_domain.adaptiveROMUpdateRank)
         
         FS = self.window[self.residual_samplepts, :]

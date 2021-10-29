@@ -276,6 +276,36 @@ class RomModel:
             )
 
         return sol
+    
+    ### debug only
+    # def decode_sol_oldbasis(self, code_in):
+        
+    #     sol = self.prev_basis @ code_in
+    #     sol = np.reshape(sol, (self.num_vars, -1), order="C")
+        
+    #     if self.target_cons:
+    #         sol = self.scale_profile(
+    #             sol,
+    #             normalize=True,
+    #             norm_fac_prof=self.norm_fac_prof_cons,
+    #             norm_sub_prof=self.norm_sub_prof_cons,
+    #             center=True,
+    #             cent_prof=self.cent_prof_cons,
+    #             inverse=True,
+    #         )
+
+    #     else:
+    #         sol = self.scale_profile(
+    #             sol,
+    #             normalize=True,
+    #             norm_fac_prof=self.norm_fac_prof_prim,
+    #             norm_sub_prof=self.norm_sub_prof_prim,
+    #             center=True,
+    #             cent_prof=self.cent_prof_prim,
+    #             inverse=True,
+    #         )
+
+    #     return sol
 
     def update_sol(self, sol_domain):
         """Update solution after low-dimensional code has been updated.

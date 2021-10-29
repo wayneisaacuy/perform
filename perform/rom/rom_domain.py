@@ -385,7 +385,7 @@ class RomDomain:
                 else:
                     self.adaptiveROMadaptevery = adapt_every
                         
-                #self.basis_adapted = 0
+                self.basis_adapted = 0
                 
                 assert self.adaptiveROMInitTime < solver.num_steps, "Initial time for adaptive ROM has to be less than the maximum number of time steps!"
                 
@@ -468,6 +468,27 @@ class RomDomain:
         # where you solve the ROM for a current time step
 
         print("Iteration " + str(solver.iter))
+
+        # check if basis was adapted
+        if self.has_time_integrator and self.adaptiveROM:
+            if self.basis_adapted == 1:
+
+                # update code and FOM approx with respect to new basis    
+                for model in self.model_list:
+                    
+                    model.code = np.dot(model.trial_basis.T, np.dot(model.prev_basis, model.code))
+                    model.code_hist[0] = model.code.copy()
+                    model.code_hist[1] = model.code.copy()
+                    model.update_sol(sol_domain)
+                
+                sol_domain.sol_int.update_state(from_cons=(not sol_domain.time_integrator.dual_time))
+                sol_domain.sol_int.sol_hist_cons[0] = sol_domain.sol_int.sol_cons.copy()
+                sol_domain.sol_int.sol_hist_prim[0] = sol_domain.sol_int.sol_prim.copy()
+            
+                sol_domain.sol_int.sol_hist_cons[1] = sol_domain.sol_int.sol_cons.copy()
+                sol_domain.sol_int.sol_hist_prim[1] = sol_domain.sol_int.sol_prim.copy()
+
+                self.basis_adapted = 0                         
 
         # Update model which does NOT require numerical time integration
         if not self.has_time_integrator:
@@ -552,8 +573,8 @@ class RomDomain:
                 
                 if model.adapt.window.shape[1] >= self.adaptiveROMWindowSize and solver.time_iter > self.adaptiveROMInitTime and solver.time_iter % self.adaptiveROMadaptevery == 0:
                     self.compute_cellidx_hyper_reduc(sol_domain)
-                    #self.basis_adapted = 1
-                    
+                    self.basis_adapted = 1
+
                 # update quantities that depend on the basis and the interpolation points. also adapt trial basis and hyperreduction basis
 
     def advance_subiter(self, sol_domain, solver):
@@ -624,7 +645,6 @@ class RomDomain:
             # evaluate rhs of Armijo rule
             rhs = model.compute_linesearch_rhs_norm(res, sigma, learn_rate, res_jacob, d_code, sol_domain)
             
-            # evaluate lhs of Armijo rule
             new_state = model.decode_sol(model.code + learn_rate * d_code)
             new_state = new_state.reshape((-1,1))
             new_res = self.time_integrator.calc_fullydisc_residual(sol_int.sol_hist_cons, sol_domain,\
@@ -637,6 +657,8 @@ class RomDomain:
             learn_rate = 0.5*learn_rate
         
         return learn_rate
+        
+        # new_state = model.decode_sol_oldbasis(model.code)
             
     def correct_code_adaptive_initwindow(self, solver, sol_domain):
         

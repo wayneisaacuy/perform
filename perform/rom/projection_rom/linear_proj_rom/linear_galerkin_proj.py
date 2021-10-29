@@ -2,6 +2,7 @@ import numpy as np
 
 from perform.rom.projection_rom.linear_proj_rom.linear_proj_rom import LinearProjROM
 from perform.rom.adaptive_basis.adaptive_ROM import AdaptROM
+import copy
 
 
 class LinearGalerkinProj(LinearProjROM):
@@ -130,6 +131,9 @@ class LinearGalerkinProj(LinearProjROM):
 
     def update_basis(self, new_basis, rom_domain):
         
+        # # test for debugging
+        self.prev_basis = copy.copy(self.trial_basis)
+        
         self.trial_basis = new_basis
         
         if not rom_domain.time_integrator.time_type == "explicit":
@@ -146,4 +150,5 @@ class LinearGalerkinProj(LinearProjROM):
             #     @ np.linalg.pinv(self.hyper_reduc_basis[self.direct_samp_idxs_flat, :])
             # )
             self.hyper_reduc_operator = np.linalg.pinv(self.hyper_reduc_basis[self.direct_samp_idxs_flat, :])
-            
+        
+        

@@ -176,10 +176,10 @@ class BDF(ImplicitIntegrator):
         copy_sol_domain.sol_int.sol_cons = stateArg_reshape
         copy_sol_domain.sol_int.update_state(from_cons=True)
         
-        # update deim indices
-        copy_sol_domain.direct_samp_idxs = np.arange(0, sol_domain.mesh.num_cells)
-        copy_sol_domain.num_samp_cells = len(copy_sol_domain.direct_samp_idxs)
-        rom_domain.compute_cellidx_hyper_reduc(copy_sol_domain)
+        # # update deim indices
+        # copy_sol_domain.direct_samp_idxs = np.arange(0, sol_domain.mesh.num_cells)
+        # copy_sol_domain.num_samp_cells = len(copy_sol_domain.direct_samp_idxs)
+        # rom_domain.compute_cellidx_hyper_reduc(copy_sol_domain)
         
         # compute rhs 
         
