@@ -20,7 +20,7 @@ for adaptevery in 2 3 4 5 # 10 100
 do
 for useADEIM in AODEIM AFDEIM ADEIM
 do
-for numrescomp in 2048 # 1750 1024 # 512 256 128
+for numrescomp in 1750 1024 # 512 256 128
 do
 for multiplier in 1 # 5 10 50
 do
