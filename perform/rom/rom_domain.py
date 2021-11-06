@@ -607,7 +607,7 @@ class RomDomain:
                 d_code, code_lhs, code_rhs = model.calc_d_code(res_jacob, res, sol_domain)
                 
                 if self.use_line_search:
-                    self.learning_rate = 1
+                    self.learning_rate = 10
                     self.learning_rate = self.do_line_search(self.learning_rate, sol_domain, res_jacob, res, model, d_code, solver)
                 
                 model.code += self.learning_rate * d_code
@@ -636,7 +636,7 @@ class RomDomain:
         
         sigma = 1e-4
 
-        n_iter = 50
+        n_iter = 23
         
         sol_int = sol_domain.sol_int
         

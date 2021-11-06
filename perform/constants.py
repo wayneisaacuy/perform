@@ -13,7 +13,7 @@ TINY_NUM = 1.0e-25  # very small number
 HUGE_NUM = 1.0e25  # very large number
 
 # time integrator defaults
-SUBITER_MAX_IMP_DEFAULT = 500
+SUBITER_MAX_IMP_DEFAULT = 50
 L2_RES_TOL_DEFAULT = 1.0e-12
 L2_STEADY_TOL_DEFAULT = 1.0e-12
 RES_NORM_PRIM_DEFAULT = [1.0e5, 10.0, 300.0, 1.0]

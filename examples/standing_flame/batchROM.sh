@@ -8,7 +8,7 @@ nrsteps=40000
 # useADEIM=ADEIM
 use_FOM=0
 outskip=10   
-useLineSearch=0
+useLineSearch=1
 
 for latentDims in 8 9 # 4 5 6 7 8 9 10 11
 do
