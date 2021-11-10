@@ -16,11 +16,11 @@ for initWindowSize in 12 15 # 12 15 25 50 100
 do
 for adaptWindowSize in $(( latentDims+1 )) 11 13 15 # 12 14 7 25 50 75 100 latentDims + 1
 do
-for adaptevery in 2 3 4 5 # 10 100
+for adaptevery in 1 # 2 3 4 5 # 10 100
 do
 for useADEIM in AODEIM AFDEIM ADEIM
 do
-for numrescomp in 1750 1024 # 512 256 128
+for numrescomp in 1024 # 1750  512 256 128
 do
 for multiplier in 1 # 5 10 50
 do
