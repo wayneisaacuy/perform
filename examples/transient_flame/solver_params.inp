@@ -32,9 +32,9 @@ vel_outlet        = 1153.710650787251
 rho_outlet        = 1556.112250791559
 mass_fracs_outlet = [0.0, 1.0]
 
-#pert_type_outlet = "pressure"
-#pert_perc_outlet = 0.01
-#pert_freq_outlet = [100000.0]
+pert_type_outlet = "pressure"
+pert_perc_outlet = 0.1
+pert_freq_outlet = [50000.0]
 
 # restart files
 save_restarts     = False
