@@ -2,11 +2,11 @@ module load python/intel/3.8.6
 
 export PATH="$HOME/uni/apro/mlib:$PATH"
 
-dt=5.0e-08
-nrsteps=14000
+dt=1.0e-08
+nrsteps=7000
 use_FOM=1
 outskip=10   
-useLineSearch=0
+useLineSearch=1
 
 for latentDims in 5 6 7 8 9 10 11
 do
